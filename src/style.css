@@ -163,3 +163,34 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; }
 .dragghost img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 4px #0009); }
 
 @media (max-height: 700px) { :root { --slot: clamp(40px, calc((min(100vw, 520px) - 40px) / 6), 56px); } #view { min-height: 150px; } }
+
+/* Anführer-Name, EP-Balken, Team-KP, Item-Plätze am Pokémon */
+.leadname { font-size: 12px; color: var(--muted); line-height: 1; }
+.leadname b { color: var(--text); }
+.xp { height: 4px; background: #1a1830; border-radius: 2px; overflow: hidden; }
+.xp i { display: block; height: 100%; background: linear-gradient(90deg, #58a8f8, #8ad0ff); }
+.mon .mhp { position: absolute; left: 3px; right: 3px; bottom: 2px; height: 4px; background: #2a0e18; border-radius: 2px; overflow: hidden; }
+.mon .mhp i { display: block; height: 100%; background: #6cd06a; }
+.mon .helds { position: absolute; right: 2px; top: 2px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; width: 44%; }
+.mon .helds i { aspect-ratio: 1; border-radius: 3px; background: #120f1fcc; border: 1px solid var(--rc, #555); display: flex; align-items: center; justify-content: center; }
+.mon .helds i.free { border: 1px dashed #3a3360; background: #120f1f66; }
+.mon .helds img { width: 92%; height: 92%; object-fit: contain; }
+.mon .types { bottom: 8px; }
+.mon .lv { top: auto; bottom: 7px; left: auto; right: 3px; }
+.mon.ko img.por { filter: grayscale(1) brightness(.35); }
+.mon.ko::after { content: 'K.O.'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--bad); text-shadow: 0 1px 0 #000; }
+.mon .held { display: none; }
+
+.heldrow { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 4px 0 6px; }
+.heldrow .slot { width: 50px; height: 50px; }
+.heldrow .hint { margin: 0 0 0 4px; }
+
+.starters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: min(380px, 100%); margin: 0 auto; }
+.starters .card small { font-size: 10px; color: var(--muted); }
+
+/* Grün = wählbar / bezahlbar, rot = zu teuer */
+.card.ok { box-shadow: 0 0 0 2px #4fd16a, 0 0 10px rgba(79, 209, 106, .35); }
+.card.no { box-shadow: 0 0 0 2px #ff4a5a; opacity: .7; }
+.pr.ok { color: #6cf08a; }
+.pr.no { color: #ff6a7a; }
+.btn.no { opacity: .55; box-shadow: 0 0 0 2px #ff4a5a; }

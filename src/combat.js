@@ -1,28 +1,28 @@
 // Rundenbasierter Kampf. Jede Funktion meldet ihre Schritte über fx(evt) (Animationen/Log) und wartet darauf.
 // Ohne Oberfläche (Bot-Test) ist fx ein No-op.
 import { D, mon, itemDef, typeEff, rnd, ri, clamp, pick } from './data.js';
-import { computeStats, g, sumOps, opText } from './mods.js';
-import { run, makeMon, addMon, takeOne, maxHp, save } from './run.js';
+import { computeStats, g, opText, heldOf } from './mods.js';
+import { run, makeMon, addMon, takeOne, save, lead, fixHp, ensureLeadAble } from './run.js';
 
 let fx = async () => {};
 export const setFx = (f) => (fx = f);
 const C = () => D.B.combat;
-// Abwehr wirkt relativ zum Angriff: gleich starke Werte halbieren ungefähr den Schaden
-const defFactor = (A, Def) => (A + C().defK) / (A + C().defK + Def);
 export const STATUS = { burn: 'Verbrennung', poison: 'Gift', para: 'Paralyse', sleep: 'Schlaf', freeze: 'Eis', confuse: 'Verwirrung' };
 const TYPE_STATUS = { Feuer: 'burn', Elektro: 'para', Gift: 'poison', Psycho: 'confuse', Fee: 'sleep', Geist: 'sleep', Pflanze: 'sleep', Eis: 'freeze' };
 
 export const B = () => run.battle;
-export const P = () => computeStats(run, B()?.buffs || []);
-export const lead = () => run.team[0];
+// Werte eines Pokémon (Standard: Anführer, inkl. Kampf-Buffs)
+export const P = (m = lead()) => computeStats(run, m === lead() ? B()?.buffs || [] : [], m);
+export { lead };
 export const alive = () => B().enemies.filter((e) => e.hp > 0);
 
 // --- Kampfstart ------------------------------------------------------------------
 export async function startBattle(enemies) {
+  ensureLeadAble();
   const { stats, mods } = computeStats(run);
   run.battle = { enemies, turn: 1, energy: D.B.energy.start + Math.round(g(mods, 'energyStart')), buffs: [], stacks: {}, shield: 0, pst: {}, sashUsed: 0, extra: Math.round(g(mods, 'extraTurn')), target: 0, caught: [], log: [], quickUsed: false };
   const b = B();
-  run.hp = Math.min(run.hp, stats.hp);
+  run.team.forEach(fixHp);
   await fx({ kind: 'start' });
   for (const s of mods.selfStatus) b.pst[s] = s === 'poison' ? 1 : 3;
   if (g(mods, 'shield') > 0) { b.shield = Math.round(stats.hp * g(mods, 'shield')); await fx({ kind: 'shield', v: b.shield }); }
@@ -32,7 +32,7 @@ export async function startBattle(enemies) {
 }
 
 // --- Schaden des Spielers --------------------------------------------------------
-function dmgCalc(e, { power, type, cat, neutral }, stats, mods) {
+function dmgCalc(e, { power, type, cat, neutral }, stats, mods, who = lead()) {
   const c = C(), b = B();
   const A = cat === 'phys' ? stats.atk : stats.spa;
   let D_ = cat === 'phys' ? e.def : e.spd;
@@ -42,23 +42,23 @@ function dmgCalc(e, { power, type, cat, neutral }, stats, mods) {
   D_ *= 1 - clamp(ign, 0, 0.9);
   let eff = neutral ? 1 : typeEff(type, e.types);
   if (eff > 1) eff += g(mods, 'effBoost') * (eff / 2);
-  const leadTypes = mon(lead().dex).types;
-  const stab = leadTypes.includes(type) ? c.stab : 1;
+  const stab = !neutral && mon(who.dex).types.includes(type) ? c.stab : 1;
   let mult = 1 + g(mods, 'dmgPct') + (mods.typeDmg[type] || 0) + (eff > 1 ? g(mods, 'superPct') : 0) + g(mods, 'ramp') * (b.turn - 1);
-  if (run.hp < P().stats.hp * 0.5) mult += g(mods, 'lowHp');
+  if (who.hp < stats.hp * 0.5) mult += g(mods, 'lowHp');
   if (e.st.para) mult += g(mods, 'vsPara');
   if (e.st.freeze) mult += g(mods, 'vsFreeze');
   if (Object.keys(e.st).length) mult += g(mods, 'vsStatus');
   const crit = rnd() < g(mods, 'crit');
   if (crit && g(mods, 'critPierce')) D_ *= 0.3;
-  let dmg = A * power * defFactor(A, D_) * eff * stab * mult * (0.9 + rnd() * 0.2);
+  // Pokémon-Schadensformel: ((2·Lv/5 + 2) · Stärke · A/V) / 50 + 2
+  let dmg = (((2 * who.level) / 5 + 2) * c.basePower * power * A / Math.max(1, D_) / 50 + 2) * eff * stab * mult * (0.85 + rnd() * 0.15);
   if (crit) dmg *= c.critMult + g(mods, 'critDmg');
   return { dmg: Math.max(eff === 0 ? 0 : 1, Math.round(dmg)), eff, crit };
 }
 
 // Ein Treffer (inkl. Status, Kettenschaden, Lebensraub …)
-async function strike(e, move, { stats, mods, label, secondary = false, statusBonus = null } = {}) {
-  const { dmg, eff, crit } = dmgCalc(e, move, stats, mods);
+async function strike(e, move, { stats, mods, label, secondary = false, statusBonus = null, who = lead() } = {}) {
+  const { dmg, eff, crit } = dmgCalc(e, move, stats, mods, who);
   await fx({ kind: 'hit', e, dmg: absorb(e, dmg), eff, crit, type: move.type, label });
   if (e.hp <= 0) { await onKill(e, mods); return dmg; }
   // Status-Chancen
@@ -115,22 +115,30 @@ export async function inflict(e, s, mods, quiet = false) {
 }
 
 async function heal(v, mods, label) {
-  const max = P().stats.hp;
+  const m = lead(), max = P().stats.hp;
   v = Math.round(v * (1 + g(mods, 'healPct')));
-  const h = Math.min(v, max - run.hp);
-  if (h <= 0) return;
-  run.hp += h;
+  const h = Math.min(v, max - m.hp);
+  if (h <= 0 || m.fainted) return;
+  m.hp += h;
   await fx({ kind: 'heal', v: h, label });
 }
 async function hurtPlayer(dmg, label) {
-  run.hp = Math.max(0, run.hp - dmg);
+  lead().hp = Math.max(0, lead().hp - dmg);
   await fx({ kind: 'phit', dmg, label, small: true });
-  await sashCheck();
+  await checkFaint();
 }
-async function sashCheck() {
-  if (run.hp > 0) return;
+async function checkFaint() {
+  const m = lead();
+  if (m.hp > 0 || m.fainted) return;
   const { mods } = P();
-  if (B().sashUsed < g(mods, 'sash')) { B().sashUsed++; run.hp = 1; await fx({ kind: 'say', text: 'Fokusgurt! Mit 1 KP überlebt.' }); }
+  if (B().sashUsed < g(mods, 'sash')) { B().sashUsed++; m.hp = 1; await fx({ kind: 'say', text: 'Fokusgurt! Mit 1 KP überlebt.' }); return; }
+  // K.O.: das nächste kampffähige Pokémon kommt automatisch
+  m.fainted = true;
+  B().pst = {};
+  await fx({ kind: 'faint', m });
+  if (battleLost()) return;
+  ensureLeadAble();
+  await fx({ kind: 'swap' });
 }
 
 // --- Aktionen des Spielers ----------------------------------------------------------
@@ -141,10 +149,10 @@ export function specialCost() {
   return Math.max(0, D.B.energy.specialCost + Math.round(g(mods, 'specialCost')));
 }
 export function leadMoves() {
-  const sp = mon(lead().dex);
+  const sp = mon(lead().dex), mv = monMove(lead());
   return {
     attack: { name: 'Angriff', type: sp.types[0], cat: 'phys', power: C().attackMult, neutral: true },
-    special: { name: sp.move.name, type: sp.move.type, cat: 'spez', power: C().specialMult * (sp.move.power / 60) },
+    special: { name: mv.name, type: mv.type, cat: mv.cat === 'phys' ? 'phys' : 'spez', power: C().specialMult * mv.power },
   };
 }
 
@@ -181,7 +189,7 @@ async function doAction(action, arg) {
   if (b.pst.confuse > 0) b.pst.confuse--;
   if (confused && ['attack', 'special'].includes(action)) {
     await fx({ kind: 'say', text: 'Verwirrt! Du triffst dich selbst.' });
-    await hurtPlayer(Math.round(stats.atk * 0.6), 'Verwirrung');
+    await hurtPlayer(Math.max(1, Math.round(stats.hp * 0.1)), 'Verwirrung');
     return true;
   }
   if (action === 'attack') {
@@ -206,6 +214,7 @@ async function doAction(action, arg) {
   else if (action === 'mon') return useMon(arg.idx, stats, mods);
   else if (action === 'sacrifice') return sacrifice(arg.idx, mods);
   else if (action === 'lead') {
+    if (!run.team[arg.idx] || run.team[arg.idx].fainted) return false;
     const [m] = run.team.splice(arg.idx, 1);
     run.team.unshift(m);
     await fx({ kind: 'swap' });
@@ -269,18 +278,19 @@ async function typeBurst(type, power, stats, mods, label) {
 // Team-Pokémon einsetzen (typisierter Großangriff, danach erschöpft bis zum nächsten Floor)
 export function monMove(m) {
   const sp = mon(m.dex);
-  const tm = m.held && itemDef(m.held.id).tm;
+  const tm = heldOf(m).map((it) => itemDef(it.id).tm).find(Boolean);
   return tm ? { name: tm.name, type: tm.type, cat: 'spez', power: tm.power } : { ...sp.move, power: sp.move.power / 60 };
 }
+// Das Pokémon greift mit seinen eigenen Werten und Items an
 async function useMon(idx, stats, mods) {
   const m = run.team[idx];
-  if (!m || m.used) return false;
+  if (!m || m.used || m.fainted) return false;
   m.used = true;
-  const mv = monMove(m), sp = mon(m.dex);
-  const k = C().useMonMult * (1 + g(mods, 'monUsePct')) * (0.7 + m.level * 0.015) * (1 + sp.base.reduce((a, c) => a + c) / 1200);
+  const mv = monMove(m), sp = mon(m.dex), own = P(m);
+  const k = C().useMonMult * (1 + g(mods, 'monUsePct'));
   const move = { name: mv.name, type: mv.type, cat: mv.cat === 'phys' ? 'phys' : 'spez', power: mv.power * k };
   await fx({ kind: 'monuse', m, move });
-  await strike(target(), move, { stats, mods, label: `${sp.name}: ${mv.name}`, statusBonus: TYPE_STATUS[mv.type] });
+  await strike(target(), move, { stats: own.stats, mods: own.mods, who: m, label: `${sp.name}: ${mv.name}`, statusBonus: TYPE_STATUS[mv.type] });
   return true;
 }
 // Pokémon opfern: massiver Floor-Boost, permanente Affinität
@@ -292,7 +302,8 @@ async function sacrifice(idx, mods) {
   run.floorOps.push({ op: 'allPct', v: S.floorAllPct * mult });
   sp.types.forEach((t, i) => (run.floorStacks[t] = (run.floorStacks[t] || 0) + Math.round((i === 0 ? D.stacks.mainType : D.stacks.subType) * S.stackMult * mult)));
   for (const t of sp.types) run.aff[t] = (run.aff[t] || 0) + S.affinity;
-  if (m.held) run.events.push({ kind: 'toast', text: `${itemDef(m.held.id).name} ging mit verloren` });
+  for (const it of heldOf(m)) run.events.push({ kind: 'toast', text: `${itemDef(it.id).name} ging mit verloren` });
+  ensureLeadAble();
   await fx({ kind: 'sacrifice', m });
   const st = P();
   await heal(st.stats.hp * S.healPct, st.mods, 'Opfer');
@@ -354,7 +365,7 @@ async function endPlayerAction() {
   if (b.extra > 0) { b.extra--; await fx({ kind: 'say', text: 'Extra-Aktion!' }); return; }
   if (g(mods, 'quick') > 0 && !b.quickUsed && rnd() < g(mods, 'quick')) { b.quickUsed = true; await fx({ kind: 'say', text: 'Flinkklaue! Noch eine Aktion.' }); return; }
   b.quickUsed = false;
-  for (const e of alive()) { await enemyTurn(e); if (run.hp <= 0) return; }
+  for (const e of alive()) { await enemyTurn(e); if (battleLost()) return; }
   await roundEnd();
 }
 
@@ -373,8 +384,9 @@ function enemyDmg(e, it, stats, mods) {
   const Dp = spec ? stats.spd : stats.def;
   const mult = { atk: 1, strong: 1.6, spez: 1.3, status: 0.5 }[it] || 1;
   const eff = spec ? typeEff(type, mon(lead().dex).types) : 1;
+  const stab = spec && e.types.includes(type) ? c.stab : 1;
   const burn = e.st.burn && !spec ? 0.75 : 1;
-  const dmg = A * mult * defFactor(A, Dp) * eff * burn * (1 + g(mods, 'dmgTaken'));
+  const dmg = (((2 * e.level) / 5 + 2) * c.basePower * mult * A / Math.max(1, Dp) / 50 + 2) * eff * stab * burn * (1 + g(mods, 'dmgTaken'));
   return { dmg: Math.max(eff === 0 ? 0 : 1, Math.round(dmg)), eff, type };
 }
 async function enemyTurn(e) {
@@ -388,7 +400,7 @@ async function enemyTurn(e) {
   if (e.st.para && rnd() < C().paraSkip) { await fx({ kind: 'say', text: `${e.name} ist paralysiert!` }); return; }
   if (e.st.confuse > 0) {
     e.st.confuse--; if (!e.st.confuse) delete e.st.confuse;
-    if (rnd() < C().confuseSelfHit) { await dealRaw(e, Math.round(e.atk * 0.8), 'Normal', 'Verwirrt'); return; }
+    if (rnd() < C().confuseSelfHit) { await dealRaw(e, Math.max(1, Math.round(e.max * 0.1)), 'Normal', 'Verwirrt'); return; }
   }
   if (it === 'guard') { e.guard = Math.round(e.max * 0.2); await fx({ kind: 'eguard', e }); return; }
   if (it === 'buff') { e.buff++; await fx({ kind: 'ebuff', e }); return; }
@@ -398,23 +410,25 @@ async function enemyTurn(e) {
   if (rnd() < evade) { await fx({ kind: 'miss' }); return; }
   let { dmg, eff } = enemyDmg(e, it, stats, mods);
   if (b.shield > 0) { const a = Math.min(b.shield, dmg); b.shield -= a; dmg -= a; if (a) await fx({ kind: 'shieldhit', v: a }); }
-  run.hp = Math.max(0, run.hp - dmg);
+  const victim = lead();
+  victim.hp = Math.max(0, victim.hp - dmg);
   await fx({ kind: 'phit', dmg, eff, e, type: it === 'spez' || it === 'status' ? e.move.type : e.types[0] });
-  await sashCheck();
+  await checkFaint();
   if (g(mods, 'thorns') > 0 && dmg > 0) await dealRaw(e, Math.round(dmg * g(mods, 'thorns')), 'Gestein', 'Dornen');
-  if (it === 'status' && run.hp > 0) {
+  if (victim.fainted) return;
+  if (it === 'status' && victim.hp > 0) {
     const s = TYPE_STATUS[e.move.type] || TYPE_STATUS[e.types[0]] || 'poison';
     if (g(mods, 'statusImmune') > 0) await fx({ kind: 'say', text: 'Status abgewehrt!' });
     else { b.pst[s] = s === 'sleep' ? 2 : s === 'freeze' ? 1 : s === 'confuse' ? 2 : s === 'poison' ? (b.pst.poison || 0) + 1 : true; await fx({ kind: 'pstatus', s }); await autoTriggers('status'); }
   }
-  if (run.hp > 0 && run.hp < stats.hp * 0.5) await autoTriggers('lowHp');
+  if (victim.hp > 0 && victim.hp < stats.hp * 0.5) await autoTriggers('lowHp');
 }
 // Angelegte Beeren lösen automatisch aus (und sind dann weg)
 async function autoTriggers(kind) {
-  for (const holder of [...run.team.map((m) => ({ m })), ...run.trainerEq.map((_, i) => ({ t: i }))]) {
-    const inst = holder.m ? holder.m.held : run.trainerEq[holder.t];
-    if (!inst || itemDef(inst.id).trigger !== kind) continue;
-    if (holder.m) holder.m.held = null; else run.trainerEq[holder.t] = null;
+  const m = lead();
+  for (const [i, inst] of heldOf(m).entries()) {
+    if (itemDef(inst.id).trigger !== kind) continue;
+    m.held.splice(i, 1);
     const { stats, mods } = P();
     await fx({ kind: 'use', inst, auto: true });
     await applyUse(inst, itemDef(inst.id).use, stats, mods);
@@ -434,10 +448,10 @@ async function roundEnd() {
   }
   if (b.pst.burn) await hurtPlayer(Math.round(stats.hp * c.burnTick * 0.5), 'Verbrennung');
   if (b.pst.poison) await hurtPlayer(Math.round(stats.hp * c.poisonTick * 0.5 * b.pst.poison), 'Gift');
-  if (g(mods, 'regen') > 0 && run.hp > 0) await heal(stats.hp * g(mods, 'regen'), mods, 'Regeneration');
+  if (g(mods, 'regen') > 0 && !lead().fainted) await heal(stats.hp * g(mods, 'regen'), mods, 'Regeneration');
   b.energy = Math.min(D.B.energy.max, b.energy + D.B.energy.perTurn + Math.round(g(mods, 'energyGain')));
   b.turn++;
 }
 
 export const battleWon = () => B() && !alive().length;
-export const battleLost = () => run.hp <= 0;
+export const battleLost = () => run.team.every((m) => m.fainted);

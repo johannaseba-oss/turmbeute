@@ -1,12 +1,14 @@
-// Test-Bot (nur mit ?bot in der URL): spielt Läufe automatisch für Balancing. Aufruf in der Konsole: await __bot.run({ dex: 4, floors: 40 })
+// Test-Bot (nur mit ?bot in der URL): spielt Läufe automatisch für Balancing. Aufruf in der Konsole: await __bot.run({ floors: 40 }) (dex = festes Einzel-Team)
 // smart = legt Items an, kauft Tränke, setzt Pokémon bei Bossen ein. Ergebnis: erreichter Floor + Werte je Rast.
+import { rollStarters } from './ui/starter.js';
+
 export function installBot(G, R, K, stage) {
   const tick = () => new Promise((r) => setTimeout(r, 0));
   const JUNK = /ball|trank|x-|bonbon|fragment|nugget|star-piece|comet|shiny-shard|hyperheiler|beere|lucky|everstone/;
-  async function play({ dex = 4, floors = 40, ms = 120000, smart = true } = {}) {
+  async function play({ dex = null, floors = 40, ms = 120000, smart = true } = {}) {
     stage.speed = 500;
     document.querySelector('#overlay').classList.add('hidden');
-    G.newRun(dex);
+    G.newRun(dex ? [dex] : rollStarters());
     const t0 = Date.now(), log = [];
     while (Date.now() - t0 < ms) {
       const run = __tb.run;
@@ -18,7 +20,7 @@ export function installBot(G, R, K, stage) {
         const low = K.alive().find((e) => e.hp / e.max < 0.35 && !e.boss);
         const potion = run.inv.findIndex((x) => x && ['trank', 'supertrank', 'hypertrank'].includes(x.id));
         const freeMon = run.team.findIndex((m) => !m.used);
-        if (run.hp < st.hp * 0.35 && potion >= 0) await G.act('item', { idx: potion });
+        if (run.team[0].hp < st.hp * 0.35 && potion >= 0) await G.act('item', { idx: potion });
         else if (low && balls.length && run.team.length < 6) { b.targetUid = low.uid; await G.act('ball', { idx: balls[0][1] }); }
         else if (smart && freeMon >= 0 && K.alive().some((e) => e.boss || e.elite)) await G.act('mon', { idx: freeMon });
         else if (b.energy >= K.specialCost()) await G.act('special');
@@ -30,12 +32,11 @@ export function installBot(G, R, K, stage) {
       } else if (run.phase === 'keystone') G.pickKeystone(run.ksOffer[0]);
       else if (run.phase === 'rest') {
         if (smart) {
-          run.team.forEach((m, mi) => { if (!m.held) { const i = run.inv.findIndex((x) => x && !JUNK.test(x.id)); if (i >= 0) G.equip(i, { mon: mi }); } });
-          run.trainerEq.forEach((t, ti) => { if (!t) { const i = run.inv.findIndex((x) => x && !JUNK.test(x.id)); if (i >= 0) G.equip(i, { trainer: ti }); } });
+          run.team.forEach((m, mi) => { for (let k = m.held.length; k < 4; k++) { const i = run.inv.findIndex((x) => x && !JUNK.test(x.id)); if (i >= 0) G.equip(i, mi); } });
           run.shop.offers.forEach((o, i) => { if (o.fixed && o.id === 'trank' && run.gold > 40) G.buy(i); });
         }
         const s = K.P().stats;
-        log.push(`F${run.floor} hp${s.hp} atk${s.atk} spa${s.spa} def${s.def} g${run.gold} team${run.team.length} lv${run.team[0].level}`);
+        log.push(`F${run.floor} hp${s.hp} atk${s.atk} spa${s.spa} def${s.def} g${run.gold} team${run.team.length} lv${run.team.map((m) => m.level).join('/')}`);
         run.inv.forEach((x, i) => { if (x && !x.id.includes('ball') && !x.id.includes('trank')) G.salvage(i); });
         await G.next();
       } else await new Promise((r) => setTimeout(r, 30));

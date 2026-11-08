@@ -42,7 +42,7 @@ export class Stage {
   setScene(leadDex, enemies) {
     const keep = new Map();
     const player = this.actors.get('player');
-    keep.set('player', player && player.dex === leadDex ? player : this.actor(leadDex, 'p'));
+    keep.set('player', player && player.dex === leadDex && player.alpha > 0.5 ? player : this.actor(leadDex, 'p'));
     enemies.forEach((e) => keep.set(e.uid, this.actors.get(e.uid) || this.actor(e.dex, 'e')));
     this.actors = keep;
     this.enemies = enemies;
@@ -79,11 +79,37 @@ export class Stage {
     return { im, sx: i * a.fw, sy: (a.rows === 1 ? 0 : dir) * a.fh, fw: a.fw, fh: a.fh };
   }
 
+  // Hintergrund-Sprite (art/bg/<id>.png) für den aktuellen Floor
+  setBackground(id) {
+    if (id === this.bgId) return;
+    this.bgId = id;
+    this.bg = null;
+    const im = img(artUrl(`bg/${id}.png`));
+    if (!ok(im)) im.addEventListener('load', () => { if (this.bgId === id) this.bg = null; }, { once: true });
+  }
   drawBg() {
     const W = this.c.width, H = this.c.height;
     const off = document.createElement('canvas');
     off.width = W; off.height = H;
     const x = off.getContext('2d');
+    const bgi = this.bgId && img(artUrl(`bg/${this.bgId}.png`));
+    if (ok(bgi)) {
+      // Bild füllend (Ausschnitt mittig), etwas abgedunkelt, Boden-Verlauf für Kontrast unter den Sprites
+      x.imageSmoothingEnabled = false;
+      const k = Math.max(W / bgi.naturalWidth, H / bgi.naturalHeight);
+      const dw = bgi.naturalWidth * k, dh = bgi.naturalHeight * k;
+      x.drawImage(bgi, (W - dw) / 2, (H - dh) / 2, dw, dh);
+      x.fillStyle = `rgba(12,10,24,${D.B.backgrounds?.dim ?? 0.3})`;
+      x.fillRect(0, 0, W, H);
+      const fl = x.createLinearGradient(0, H * 0.55, 0, H);
+      fl.addColorStop(0, 'rgba(12,10,24,0)'); fl.addColorStop(1, 'rgba(12,10,24,0.55)');
+      x.fillStyle = fl; x.fillRect(0, 0, W, H);
+      const v = x.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, W * 0.75);
+      v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.5)');
+      x.fillStyle = v; x.fillRect(0, 0, W, H);
+      this.bg = off;
+      return;
+    }
     const gr = x.createLinearGradient(0, 0, 0, H);
     gr.addColorStop(0, '#1a1730'); gr.addColorStop(0.62, '#2a2446'); gr.addColorStop(0.63, '#221d38'); gr.addColorStop(1, '#141122');
     x.fillStyle = gr; x.fillRect(0, 0, W, H);

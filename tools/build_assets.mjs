@@ -31,7 +31,7 @@ for (const p of dex) {
   out.push({
     dex: p.dex, name: p.name, types: p.types, rarity: p.rarity, stage: p.stage, family: p.family,
     legendary: sp.legendary, mythical: sp.mythical, baby: sp.baby, catch: sp.capture,
-    base: b.base,
+    base: b.base, exp: b.exp || 60, growth: b.growth || 2,
     move: mv ? { name: mv.name, type: mv.type, cat: mv.cat === 'spez' ? 'spez' : 'phys', power: mv.power || 60 } : { name: 'Tackle', type: p.types[0], cat: 'phys', power: 40 },
     evos: (b.evos || []).filter((e) => !e.gender).map((e) => (e.stone ? { to: e.to, stone: e.stone } : { to: e.to, level: e.level || 30 })),
     anims: Object.fromEntries(ANIMS.map((a) => { const x = p.anims[a]; return [a, { fw: x.fw, fh: x.fh, cols: x.cols, rows: x.rows, dur: x.dur, file: x.file }]; })),
@@ -53,3 +53,14 @@ fs.writeFileSync(path.join(PUB, 'data/vfx_sheets.json'), JSON.stringify(vfx.shee
 for (const f of ['zeitturm.mp3', 'gilde.mp3', 'verborgenes-land.mp3']) cp(path.join(SRC, 'public/audio', f), path.join(PUB, 'audio', f));
 for (const f of ['ballfall.wav', 'muenze.wav', 'mechanik.wav', 'fp_klick.wav', 'fp_richtig.wav', 'fp_fehler.wav', 'fp_whoosh.wav', 'fp_rang.wav']) cp(path.join(SRC, 'public/audio/sfx', f), path.join(PUB, 'audio/sfx', f));
 console.log('fertig – Item-Icons: npm run items');
+
+// Kampf-Hintergründe: PMD-Dungeon-Bilder (erstes Bild bei Animationen) → public/art/bg/<id>.png
+const BG = 'D:/Pokemon Sprites/Hintergründe/';
+if (fs.existsSync(BG)) {
+  mk(path.join(PUB, 'art/bg'));
+  for (const f of fs.readdirSync(BG)) {
+    const id = f.split('.')[1];
+    await sharp(path.join(BG, f), { pages: 1 }).png().toFile(path.join(PUB, 'art/bg', id + '.png'));
+  }
+  console.log('Hintergründe:', fs.readdirSync(path.join(PUB, 'art/bg')).length);
+}

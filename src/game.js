@@ -1,6 +1,6 @@
 // Spielablauf: Titel → Starter → Floors (Kämpfe → Beute) → Rast (Shop, Zerlegen, Keystones) → … → Game Over.
 import { D, mon, itemDef, portraitUrl, itemIconUrl, typeColor, rarityColor, pick, rnd } from './data.js';
-import { computeStats, g, sumOps, keystoneOps, opText } from './mods.js';
+import { computeStats, g, sumOps, keystoneOps, opText, expGain } from './mods.js';
 import * as R from './run.js';
 import { run } from './run.js';
 import * as K from './combat.js';
@@ -77,6 +77,7 @@ async function fx(ev) {
     case 'sacrifice': stage.vfx('player', 'level_up_burst', 2.2, 12); sfx('fp_rang', 0.5); await banner(`${mon(ev.m.dex).name} geopfert`, 'Die Kraft geht auf dein Team über', 1100); renderHud(); return;
     case 'ball': sfx('ballfall', 0.5); log(itemDef(ev.inst.id).name + '!'); await stage.throwBall(ev.inst.id, ev.e.uid, ev.shakes, ev.ok); return;
     case 'caught': sfx('fp_rang', 0.6); await banner(`${ev.e.name} gefangen!`, ev.full ? 'Team voll – entscheide nach dem Kampf' : 'Neu im Team', 1100); renderHud(); return;
+    case 'faint': sfx('fp_fehler', 0.4); await stage.ko('player'); log(`${mon(ev.m.dex).name} ist besiegt!`); await stage.wait(400); return;
     case 'swap': stage.setScene(run.team[0].dex, run.battle.enemies); renderHud(); return W(250);
     case 'say': log(ev.text); return W(380);
     case 'update': stage.setScene(run.team[0].dex, run.battle?.enemies || []); refreshIntents(); renderHud(); return;
@@ -112,13 +113,13 @@ export const G = {
       h('div.title', 'TURMBEUTE'),
       h('div.subtitle', 'Erklimme den endlosen Turm. Fange, sammle, zerlege – und bau dir den absurdesten Build.'),
       h('div.menu',
-        saved && saved.phase !== 'over' ? h('button.btn.pri', { onclick: () => G.resume(saved) }, `Fortsetzen`, h('small', `Floor ${saved.floor} · ${mon(saved.team[0].dex).name}`)) : null,
-        h('button.btn.gold', { onclick: () => starterScreen((dex) => G.newRun(dex)) }, 'Neuer Lauf'),
+        saved && saved.v === 2 && saved.phase !== 'over' ? h('button.btn.pri', { onclick: () => G.resume(saved) }, `Fortsetzen`, h('small', `Floor ${saved.floor} · ${mon(saved.team[0].dex).name}`)) : null,
+        h('button.btn.gold', { onclick: () => starterScreen((dexes) => G.newRun(dexes)) }, 'Neuer Lauf'),
         h('button.btn', { onclick: (e) => { const on = toggleSound(); e.currentTarget.textContent = on ? 'Ton: an' : 'Ton: aus'; } }, soundOn() ? 'Ton: an' : 'Ton: aus'),
         meta.best ? h('div.hint', { style: { textAlign: 'center' } }, `Rekord: Floor ${meta.best} · ${meta.runs} Läufe`) : null));
   },
-  newRun(dex) {
-    R.newRun(dex);
+  newRun(dexes) {
+    R.newRun(dexes);
     const m = R.loadMeta(); m.runs++; R.saveMeta(m);
     $('#overlay').classList.add('hidden');
     setMusic('zeitturm.mp3');
@@ -131,6 +132,7 @@ export const G = {
     if (run.phase === 'battle' && run.battle) {
       run.battle.busy = false;
       setMusic('zeitturm.mp3');
+      stage.setBackground(floorBg());
       stage.setScene(run.team[0].dex, run.battle.enemies);
       refreshIntents();
       G.refresh();
@@ -141,6 +143,7 @@ export const G = {
 
   async nextFight(same = false) {
     const me = run;
+    stage.setBackground(floorBg());
     if (!same) run.fight++;
     run.phase = 'battle';
     const enemies = R.makeFightEnemies(run.floor);
@@ -186,9 +189,10 @@ export const G = {
       else items.push(R.makeItem('master-fragment', run.floor));
     }
     const boss = defeated.some((e) => e.boss);
-    const { stats, mods } = computeStats(run);
+    const { mods } = computeStats(run);
     run.battle = null;
-    run.hp = Math.min(stats.hp, Math.round(run.hp + stats.hp * (D.B.floor.healAfterFight + g(mods, 'afterFightHeal'))));
+    giveFightExp(defeated);
+    R.healTeam(D.B.floor.healAfterFight + g(mods, 'afterFightHeal'));
     run.loot = { items, gold, mons, boss };
     run.phase = 'loot';
     sfx('muenze', 0.5);
@@ -214,6 +218,14 @@ export const G = {
     it.taken = true;
     toast('Zerlegt: ' + gainText(gn));
     sfx('mechanik', 0.35);
+    G.refresh();
+  },
+  sellLoot(i) {
+    const it = run.loot.items[i];
+    if (!it || it.taken) return;
+    run.gold += R.sellPrice(it);
+    it.taken = true;
+    sfx('muenze', 0.5);
     G.refresh();
   },
   takeMon(i, replace = null) {
@@ -244,10 +256,8 @@ export const G = {
     }
   },
   floorEnd() {
-    R.levelTeam();
-    run.hp = computeStats(run).stats.hp;
     run.floorOps = []; run.floorStacks = {};
-    run.hp = computeStats(run).stats.hp;
+    R.healTeam(D.B.floor.healAfterFloor, true);
     R.makeShop();
     const ks = run.floor % D.B.keystoneEvery === 0 || R.isBossFloor(run.floor);
     run.phase = ks ? 'keystone' : 'rest';
@@ -261,20 +271,31 @@ export const G = {
     run.ksOffer = null;
     run.phase = 'rest';
     R.ensureInv();
-    run.hp = R.maxHp();
+    R.healTeam(1, true);
     sfx('fp_rang', 0.5);
     G.refresh();
   },
 
   // --- Inventar-Aktionen ---
-  equip(idx, target) {
-    const r = R.equip(idx, target);
+  // Item an Pokémon mi anlegen; ist es voll, wird gefragt, welches Item ersetzt wird
+  equip(idx, mi, replace = null) {
+    const r = R.equip(idx, mi, replace);
+    if (r === 'full') return replacePicker(idx, mi);
     if (r === 'evolved') sfx('fp_rang', 0.5); else sfx('fp_klick', 0.4);
-    run.hp = Math.min(run.hp, R.maxHp());
     G.processEvents();
     G.refresh();
   },
-  unequip(target) { if (!R.unequip(target)) return G.toastNo('Kein Platz im Inventar.'); run.hp = Math.min(run.hp, R.maxHp()); G.refresh(); },
+  unequip(mi, slot) { if (!R.unequip(mi, slot)) return G.toastNo('Kein Platz im Inventar.'); G.refresh(); },
+  // Trank o. Ä. außerhalb des Kampfes auf ein Pokémon
+  useOn(idx, mi) {
+    const u = itemDef(run.inv[idx].id).use, m = run.team[mi];
+    if (m.fainted) return G.toastNo('Besiegte Pokémon werden in der Rast wiederbelebt.');
+    R.takeOne(idx);
+    const max = R.fixHp(m);
+    m.hp = Math.min(max, m.hp + Math.round(max * (u.heal || 0)));
+    sfx('fp_richtig', 0.4);
+    G.refresh();
+  },
   salvage(idx) {
     const inst = run.inv[idx];
     const gn = R.salvageGain(inst);
@@ -294,8 +315,8 @@ export const G = {
     G.processEvents();
     G.refresh();
   },
-  setLead(i) { const [m] = run.team.splice(i, 1); run.team.unshift(m); G.refresh(); },
-  release(i) { R.releaseMon(i); run.hp = Math.min(run.hp, R.maxHp()); G.processEvents(); G.refresh(); },
+  setLead(i) { if (run.team[i].fainted) return G.toastNo('Dieses Pokémon ist besiegt.'); const [m] = run.team.splice(i, 1); run.team.unshift(m); G.refresh(); },
+  release(i) { R.releaseMon(i); G.processEvents(); G.refresh(); },
   buy(i) {
     const o = run.shop.offers[i];
     if (!o || o.sold) return;
@@ -325,6 +346,7 @@ export const G = {
     for (const e of ev) {
       if (e.kind === 'toast') toast(e.text);
       if (e.kind === 'evolve') evolvePopup(e);
+      if (e.kind === 'levelup') { const m = run.team.find((x) => x.uid === e.uid); if (m) toast(`${mon(m.dex).name} erreicht Lv ${e.level}!`); }
     }
   },
   gameOver() {
@@ -340,21 +362,48 @@ export const G = {
       h('div.subtitle', `Floor ${run.floor} erreicht${run.floor >= best ? ' – neuer Rekord!' : ` · Rekord ${best}`}`),
       h('div', { style: { display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap', justifyContent: 'center' } }, run.team.map((m) => h('img', { src: portraitUrl(m.dex), style: { width: '48px', imageRendering: 'pixelated', borderRadius: '6px' } }))),
       h('div.hint', `Besiegt ${run.stats.kills} · Gefangen ${run.stats.caught} · Zerlegt ${run.stats.salvaged} · Keystones ${run.keystones.length}`),
-      h('div.menu', { style: { marginTop: '16px' } }, h('button.btn.gold', { onclick: () => starterScreen((dex) => G.newRun(dex)) }, 'Neuer Lauf'), h('button.btn', { onclick: () => G.title() }, 'Titel')));
+      h('div.menu', { style: { marginTop: '16px' } }, h('button.btn.gold', { onclick: () => starterScreen((dexes) => G.newRun(dexes)) }, 'Neuer Lauf'), h('button.btn', { onclick: () => G.title() }, 'Titel')));
   },
   menu() {
     openSheet(h('h3', 'Menü'), h('div.btns',
       h('button.btn', { onclick: (e) => { const on = toggleSound(); e.currentTarget.textContent = on ? 'Ton: an' : 'Ton: aus'; } }, soundOn() ? 'Ton: an' : 'Ton: aus'),
       h('button.btn', { onclick: () => help() }, 'Spielregeln'),
-      run && run.phase !== 'over' ? h('button.btn.warn', { onclick: () => { closeSheet(); run.hp = 0; G.gameOver(); } }, 'Lauf aufgeben') : null,
+      run && run.phase !== 'over' ? h('button.btn.warn', { onclick: () => { closeSheet(); run.team.forEach((m) => (m.fainted = true)); G.gameOver(); } }, 'Lauf aufgeben') : null,
       h('button.btn', { onclick: closeSheet }, 'Schließen')));
   },
 };
 
+// Hintergrund-Sprite für den aktuellen Floor (Reihenfolge pro Lauf gemischt, Boss-Floors eigene)
+function floorBg() {
+  const Bg = D.B.backgrounds;
+  if (R.isBossFloor(run.floor)) return Bg.boss[(run.floor / D.B.floor.bossEvery - 1) % Bg.boss.length];
+  if (!run.bgOrder) run.bgOrder = [...Bg.normal].sort(() => rnd() - 0.5);
+  return run.bgOrder[(run.floor - 1) % run.bgOrder.length];
+}
+// EP: Kämpfer bekommt alles, die anderen (nicht besiegten) den EP-Teiler-Anteil
+function giveFightExp(defeated) {
+  const X = D.B.exp, fighter = run.team[0];
+  for (const m of run.team) {
+    if (m.fainted) continue;
+    const share = m === fighter ? 1 : X.share;
+    const mult = X.mult * (1 + g(computeStats(run, [], m).mods, 'expMult'));
+    const xp = defeated.reduce((s, e) => s + expGain(e, m), 0) * share * mult;
+    R.giveExp(m, xp);
+  }
+}
+function replacePicker(idx, mi) {
+  const m = run.team[mi];
+  openSheet(h('h3', `${mon(m.dex).name}: alle Plätze belegt`), h('div.hint', 'Welches Item soll zurück ins Inventar?'),
+    h('div.btns', m.held.map((it, k) => h('button.btn', { onclick: () => { closeSheet(); G.equip(idx, mi, k); } },
+      h('img', { src: itemIconUrl(it.id), style: { width: '26px', verticalAlign: 'middle', marginRight: '6px' } }), itemDef(it.id).name)),
+    h('button.btn', { onclick: closeSheet }, 'Abbrechen')));
+}
+
 function help() {
   openSheet(h('h3', 'So funktioniert’s'), h('ul.fx',
     h('li', 'Jeder Floor hat 1–3 Kämpfe, alle 10 Floors einen Boss. Danach Rast mit Shop.'),
-    h('li', 'Dein Team (max. 6) gibt Werte, Typ-Stacks und eine kleine Fähigkeit. Der Anführer (♛) bestimmt Angriffs- und Spezialtyp und gibt mehr Werte.'),
+    h('li', 'Du startest mit 3 Pokémon auf Lv 1. Der Anführer (♛) kämpft mit seinen eigenen Werten und seinen bis zu 4 Items. Wird er besiegt, kommt das nächste. Alle geben Typ-Stacks und ihre Fähigkeit fürs Team.'),
+    h('li', 'Besiegte Gegner geben EP: der Kämpfer alle, die anderen die Hälfte. Level ohne Obergrenze, Entwicklungen wie im Original. In der Rast werden alle geheilt und wiederbelebt.'),
     h('li', 'Im Kampf: Angriff, Spezial (kostet Energie), Warten, ein Item verbrauchen, einen Ball werfen oder ein Pokémon einsetzen/opfern (Pokémon antippen).'),
     h('li', 'Fangen: je weniger KP und mit Status (Schlaf, Paralyse, Gift, Verbrennung), desto besser. Fehlwurf macht den Gegner wütend.'),
     h('li', 'Items: anlegen (an Pokémon oder Trainer-Plätze), im Kampf verbrauchen oder zerlegen für permanente Werte und Typ-Affinität. Ziehen & Ablegen geht auch.'),
@@ -396,9 +445,9 @@ function renderPanel() {
   if (run.phase === 'rest') return p.replaceChildren(...restPanel());
   p.replaceChildren();
 }
-function itemCard(inst, extra, onclick) {
+function itemCard(inst, extra, onclick, mark = 'ok') {
   const def = itemDef(inst.id);
-  return h('div.card', { class: 'card' + (inst.taken || inst.sold ? ' taken' : ''), '--rc': rarityColor(inst.r || def.rarity), onclick },
+  return h('div.card', { class: 'card' + (inst.taken || inst.sold ? ' taken' : ` ${mark}`), '--rc': rarityColor(inst.r || def.rarity), onclick },
     h('img', { src: itemIconUrl(inst.id) }), h('div.nm', def.name), extra);
 }
 function lootPanel() {
@@ -424,6 +473,7 @@ function lootSheet(i) {
   openSheet(itemHead(it), itemInfo(it), h('div.btns',
     h('button.btn.pri', { onclick: () => { closeSheet(); G.takeLoot(i); } }, 'Nehmen', h('small', `${R.freeSlots()} Plätze frei`)),
     h('button.btn.purple', { onclick: () => { closeSheet(); G.salvageLoot(i); } }, 'Sofort zerlegen'),
+    h('button.btn.gold', { onclick: () => { closeSheet(); G.sellLoot(i); } }, 'Verkaufen', h('small', `+${R.sellPrice(it)} Gold`)),
     h('button.btn', { onclick: closeSheet }, 'Zurück')));
 }
 function swapPicker(i) {
@@ -435,15 +485,15 @@ function keystonePanel() {
   return [h('div.ph', 'Keystone wählen', h('small', 'gilt für den ganzen Lauf')),
     h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, run.ksOffer.map((id) => {
       const k = D.keystones.find((x) => x.id === id);
-      return h('div.card.ks', { '--rc': '#ffd84a', onclick: () => G.pickKeystone(id) }, h('div.nm', '◆ ' + k.name), h('div', k.text));
+      return h('div.card.ks.ok', { '--rc': '#ffd84a', onclick: () => G.pickKeystone(id) }, h('div.nm', '◆ ' + k.name), h('div', k.text));
     }))];
 }
 function restPanel() {
   const S = run.shop;
   return [h('div.ph', `Rast · Floor ${run.floor}`, h('small', 'Team geheilt')),
-    h('div.cards', S.offers.map((o, i) => itemCard(o, h('div.pr', o.sold ? 'verkauft' : R.itemPrice(o) + ' G'), () => shopSheet(i)))),
-    h('div.rowbtns', h('button.btn.purple', { onclick: () => G.reroll() }, `Neu würfeln`, h('small', R.rerollCost() + ' Gold'))),
-    h('div.hint', 'Inventar-Items antippen: Anlegen, Zerlegen (permanente Werte) oder Verkaufen. Items auf Pokémon ziehen legt sie an.')];
+    h('div.cards', S.offers.map((o, i) => { const p = R.itemPrice(o), can = run.gold >= p; return itemCard(o, h('div.pr', { class: 'pr ' + (can ? 'ok' : 'no') }, o.sold ? 'verkauft' : p + ' G'), () => shopSheet(i), can ? 'ok' : 'no'); })),
+    h('div.rowbtns', h('button.btn.purple', { class: 'btn purple ' + (run.gold >= R.rerollCost() ? 'ok' : 'no'), onclick: () => G.reroll() }, `Neu würfeln`, h('small', R.rerollCost() + ' Gold'))),
+    h('div.hint', 'Grün = kannst du dir leisten, rot = zu teuer. Inventar-Items antippen: Anlegen, Zerlegen oder Verkaufen.')];
 }
 function shopSheet(i) {
   const o = run.shop.offers[i];

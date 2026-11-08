@@ -17,11 +17,11 @@ export const OPS = {
   chain: ['{p} Schaden auf alle anderen Gegner'], doubleHit: ['{p} Doppelschlag'], extraTurn: ['+{n} Extra-Aktion in Runde 1'], statusImmune: ['Statusimmun'], gold: ['{p} Gold'], catch: ['{p} Fangchance'],
   sash: ['Überlebt einmal pro Kampf mit 1 KP'], recoil: ['{p} Rückstoß'], thorns: ['wirft {p} Schaden zurück'], killHeal: ['K.O. heilt {p} KP'], lowHp: ['{p} Schaden unter 50 % KP'],
   energyStart: ['+{n} Start-Energie'], energyGain: ['+{n} Energie pro Runde'], specialCost: ['Spezial kostet {s} Energie'], quick: ['{p} Chance auf Extra-Aktion'], flinch: ['{p} Chance, dass Gegner aussetzen'],
-  levelUp: ['+{n} Level pro Floor'], holderShare: ['Träger gibt {p} mehr Werte'], noEvolve: ['keine Entwicklung'], selfStatus: ['du startest {status}'], startStatus: ['Gegner starten {status}'],
+  expMult: ['{p} Erfahrung'], noEvolve: ['keine Entwicklung'], selfStatus: ['du startest {status}'], startStatus: ['Gegner starten {status}'],
   allStacks: ['+{n} auf jeden vorhandenen Typ-Stack'], burnDmg: ['{p} Verbrennungsschaden'], poisonDmg: ['{p} Giftschaden'], burnArmor: ['Verbrannte: {p} Abwehr'], poisonArmor: ['Vergiftete: {p} Abwehr'],
   leech: ['Egelsamen {p} pro Runde'], storm: ['Hagel {p} pro Runde'], nightmare: ['Albtraum {p}'], vsPara: ['{p} gegen Paralysierte'], vsFreeze: ['{p} gegen Eingefrorene'], vsStatus: ['{p} gegen Gegner mit Status'],
   enemySpe: ['Gegner {p} Initiative'], enemyAtk: ['Gegner {p} Angriff'], paraMult: ['Paralyse-Chance ×{x}'], burnSpread: ['Verbrennung springt über'], poisonSpread: ['Gift springt bei K.O. über'], critPierce: ['Volltreffer ignorieren Abwehr'],
-  ramp: ['{p} Schaden pro Kampfrunde'], effBoost: ['sehr effektiv +{n}'], consumeStacks: ['Verbrauchen: +{n} Stacks'], invSlots: ['+{n} Inventarplätze'], trainerSlots: ['+{n} Ausrüstungsplatz'],
+  ramp: ['{p} Schaden pro Kampfrunde'], effBoost: ['sehr effektiv +{n}'], consumeStacks: ['Verbrauchen: +{n} Stacks'], invSlots: ['+{n} Inventarplätze'], heldSlots: ['+{n} Item-Platz pro Pokémon'],
   cascade: ['{p} Status-Kaskade'], salvage: ['{p} Zerlegen'], shopDiscount: ['{p} Rabatt'], shopSlots: ['+{n} Shop-Angebote'], afterFightHeal: ['{p} Heilung nach Kampf'], teamAllPct: ['{p} pro Team-Pokémon'],
   monUsePct: ['{p} Einsetzen/Opfern'], subTypeFull: ['Zweittypen volle Stacks'], useBoost: ['{p} Verbrauchen'], lootExtra: ['+{n} Beute'],
 };
@@ -61,7 +61,11 @@ export function monPerk(dex) {
   return { op, v };
 }
 
-// --- Stacks ------------------------------------------------------------------
+// --- Stacks (gelten fürs ganze Team) -----------------------------------------
+export const heldOf = (m) => m.held || [];
+export const equippedItems = (run) => run.team.flatMap(heldOf);
+export const keystoneOps = (run) => run.keystones.flatMap((id) => D.keystones.find((k) => k.id === id)?.ops || []);
+
 export function computeStacks(run, extraOps = []) {
   const S = D.stacks, st = {};
   const add = (t, n) => { if (t && n) st[t] = (st[t] || 0) + n; };
@@ -80,11 +84,6 @@ export function computeStacks(run, extraOps = []) {
   return st;
 }
 
-export const keystoneOps = (run) => run.keystones.flatMap((id) => D.keystones.find((k) => k.id === id)?.ops || []);
-export function equippedItems(run) {
-  return [...run.team.map((m) => m.held), ...run.trainerEq].filter(Boolean);
-}
-
 // Ops aus Stacks: per-Stack-Effekte (mit Affinität), Schwellen, Synergien
 export function stackOps(run, stacks) {
   const S = D.stacks, ops = [], active = { tiers: [], synergies: [] };
@@ -101,12 +100,17 @@ export function stackOps(run, stacks) {
   return { ops, active };
 }
 
-// Alle Ops des Spielers zusammentragen (außer Kampf-Buffs, die kommen über extra)
-export function allOps(run, extra = []) {
+// Diese Item-Effekte wirken fürs ganze Team, egal wer das Item trägt; alle anderen nur für den Träger
+const TEAMWIDE = new Set(['gold', 'catch', 'lootExtra', 'salvage', 'shopDiscount', 'shopSlots', 'invSlots', 'heldSlots', 'allStacks']);
+
+// Alle Ops für ein Pokémon m (Standard: Anführer). extra = Kampf-Buffs.
+export function allOps(run, extra = [], m = run.team[0]) {
   const stacks = computeStacks(run, extra);
   const { ops: sOps, active } = stackOps(run, stacks);
-  const ops = [...keystoneOps(run), ...equippedItems(run).flatMap(equipOps), ...sOps, ...(run.floorOps || []), ...extra];
-  ops.push(...run.team.map((m) => monPerk(m.dex)));
+  const own = m ? heldOf(m).flatMap(equipOps) : [];
+  const others = run.team.filter((x) => x !== m).flatMap(heldOf).flatMap(equipOps).filter((o) => TEAMWIDE.has(o.op));
+  const ops = [...keystoneOps(run), ...own, ...others, ...sOps, ...(run.floorOps || []), ...extra];
+  ops.push(...run.team.map((t) => monPerk(t.dex)));
   return { ops, stacks, active };
 }
 
@@ -122,29 +126,49 @@ export function sumOps(ops) {
 }
 export const g = (m, k) => m[k] || 0;
 
-// --- Werte -------------------------------------------------------------------
-export function levelFactor(level) { return 1 + D.B.level.statPerLevel * (level - D.B.level.start); }
-
-// Anteil eines Team-Pokémon an den Werten
-export function monShare(run, m, idx) {
-  const sp = mon(m.dex), B = D.B;
-  const holder = m.held ? equipOps(m.held).filter((o) => o.op === 'holderShare').reduce((s, o) => s + o.v, 0) : 0;
-  const k = levelFactor(m.level) * (idx === 0 ? B.leadShare : 1) * (1 + holder);
-  return Object.fromEntries(STATS.map((s, i) => [s, sp.base[i] * B.teamShare[s] * k]));
+// --- Werte (Pokémon-Formel) -----------------------------------------------------
+// KP = (2·Basis + IV)·Lv/100 + Lv + 10, andere = (2·Basis + IV)·Lv/100 + 5
+export function baseStats(dex, level) {
+  const iv = D.B.ivs;
+  return Object.fromEntries(STATS.map((s, i) => {
+    const core = Math.floor(((2 * mon(dex).base[i] + iv) * level) / 100);
+    return [s, s === 'hp' ? core + level + 10 : core + 5];
+  }));
 }
 
-export function computeStats(run, extra = []) {
-  const { ops, stacks, active } = allOps(run, extra);
-  const m = sumOps(ops);
+export function computeStats(run, extra = [], m = run.team[0]) {
+  const { ops, stacks, active } = allOps(run, extra, m);
+  const mods = sumOps(ops);
+  const base = m ? baseStats(m.dex, m.level) : Object.fromEntries(STATS.map((s) => [s, 1]));
   const out = {};
   for (const s of STATS) {
-    let v = D.B.trainer[s] + (run.perm[s] || 0) + g(m, s);
-    run.team.forEach((t, i) => (v += monShare(run, t, i)[s]));
-    const pct = g(m, s + 'Pct') + g(m, 'allPct') + g(m, 'teamAllPct') * run.team.length;
+    const v = base[s] + (run.perm[s] || 0) + g(mods, s);
+    const pct = g(mods, s + 'Pct') + g(mods, 'allPct') + g(mods, 'teamAllPct') * run.team.length;
     out[s] = Math.max(1, Math.round(v * (1 + pct)));
   }
-  return { stats: out, mods: m, stacks, active };
+  return { stats: out, mods, stacks, active };
 }
 
 export const invSize = (run) => D.B.inventorySlots + Math.round(g(sumOps(keystoneOps(run)), 'invSlots'));
-export const trainerSlotCount = (run) => D.B.trainerSlots + Math.round(g(sumOps(keystoneOps(run)), 'trainerSlots'));
+export const heldSlots = (run) => D.B.heldSlots + Math.round(g(sumOps(keystoneOps(run)), 'heldSlots'));
+
+// --- Erfahrung -------------------------------------------------------------------
+// Gesamt-EP für Level n je Wachstumsrate (1 langsam, 2 mittel, 3 schnell, 4 mittel-langsam, 5 unregelmäßig, 6 schwankend); ohne Level-Grenze
+export function expFor(growth, n) {
+  if (n <= 1) return 0;
+  const c = n ** 3;
+  switch (growth) {
+    case 1: return Math.floor(1.25 * c);
+    case 3: return Math.floor(0.8 * c);
+    case 4: return Math.max(0, Math.floor(1.2 * c - 15 * n * n + 100 * n - 140));
+    case 5: return Math.floor(n < 50 ? (c * (100 - n)) / 50 : n < 68 ? (c * (150 - n)) / 100 : n < 98 ? (c * Math.floor((1911 - 10 * n) / 3)) / 500 : n <= 100 ? (c * (160 - n)) / 100 : 0.6 * c);
+    case 6: return Math.floor(n < 15 ? (c * ((n + 1) / 3 + 24)) / 50 : n < 36 ? (c * (n + 14)) / 50 : (c * (n / 2 + 32)) / 50);
+    default: return c;
+  }
+}
+// EP für einen besiegten Gegner (Formel ab Gen. 5: niedrigere Level bekommen mehr)
+export function expGain(enemy, m) {
+  const Le = enemy.level, Lp = m.level;
+  const b = mon(enemy.dex).exp * (enemy.boss ? 2 : enemy.elite ? 1.5 : 1);
+  return Math.floor(((b * Le) / 5) * Math.pow((2 * Le + 10) / (Le + Lp + 10), 2.5)) + 1;
+}

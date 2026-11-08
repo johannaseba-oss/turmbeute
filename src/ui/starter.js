@@ -1,4 +1,4 @@
-// Starter: Typ wählen → Spielautomat (drei Walzen mit Porträts) → Reveal-Karte.
+// Starter: Typ wählen → Spielautomat: drei Walzen ziehen drei Basis-Pokémon (eins vom gewählten Typ, zwei zufällig) → Team.
 import { D, mon, portraitUrl, typeColor, artUrl, pick, rnd } from '../data.js';
 import { monPerk, opText } from '../mods.js';
 import { $, h } from './dom.js';
@@ -13,14 +13,18 @@ const MX = 7, MY = 6, CW = 270, CH = 230;
 function pool(type) {
   const S = D.B.starter;
   const ok = (p) => p.stage === 1 && !p.legendary && !p.mythical && !p.baby && S.rarities.includes(p.rarity) && p.evos.length > 0;
+  if (!type) return D.pokemon.filter(ok);
   const main = D.pokemon.filter((p) => ok(p) && p.types.includes(type));
   return main.length ? main : D.pokemon.filter(ok);
 }
-function roll(type) {
-  const S = D.B.starter, list = pool(type);
-  // leichte Abweichung: selten ein Pokémon mit anderem Typ
-  if (rnd() < S.biasOffType) return pick(D.pokemon.filter((p) => p.stage === 1 && !p.legendary && !p.mythical && !p.baby && p.evos.length && S.rarities.includes(p.rarity))).dex;
-  return pick(list).dex;
+const basePool = () => pool(null);
+// Drei verschiedene Basis-Pokémon: das erste passt zum Typ (ohne Typ: alle zufällig)
+export function rollStarters(type = null) {
+  const out = [];
+  const add = (list) => { const c = list.filter((p) => !out.includes(p.dex)); if (c.length) out.push(pick(c).dex); };
+  if (type) add(pool(type));
+  while (out.length < D.B.startTeam) add(basePool());
+  return out;
 }
 
 export function starterScreen(done) {
@@ -28,7 +32,7 @@ export function starterScreen(done) {
   ov.classList.remove('hidden');
   const S = D.B.starter;
   ov.replaceChildren(h('div.title', { style: { fontSize: '30px', marginBottom: '6px' } }, 'Starter-Typ'),
-    h('div.subtitle', { style: { margin: '0 0 14px' } }, 'Der Automat wählt ein passendes Basis-Pokémon.'),
+    h('div.subtitle', { style: { margin: '0 0 14px' } }, 'Der Automat zieht dein Team: ein Basis-Pokémon dieses Typs und zwei zufällige, alle auf Lv 1.'),
     h('div.typegrid', S.types.map((t) => h('button', { style: { background: typeColor(t) }, onclick: () => slots(t, done, S.rerolls) }, t))));
 }
 
@@ -40,10 +44,10 @@ function slots(type, done, rerolls) {
   const x = c.getContext('2d');
   x.imageSmoothingEnabled = false;
   const sheet = img(artUrl('slots/sheet.png'));
-  const target = roll(type);
-  const list = pool(type);
+  const targets = rollStarters(type);
+  const list = basePool();
   const strip = () => { const a = []; for (let i = 0; i < 14; i++) a.push(pick(list).dex); return a; };
-  const reels = [0, 1, 2].map((i) => ({ dexes: [...strip(), target], off: 0, speed: 900 + i * 60, stopAt: 1300 + i * 650, stopped: false, settle: 0 }));
+  const reels = [0, 1, 2].map((i) => ({ dexes: [...strip(), targets[i]], off: 0, speed: 900 + i * 60, stopAt: 1300 + i * 650, stopped: false, settle: 0 }));
   for (const r of reels) for (const d of r.dexes) img(portraitUrl(d));
   const t0 = performance.now();
   let phase = 'spin', winT = 0, raf;
@@ -113,13 +117,13 @@ function slots(type, done, rerolls) {
   raf = requestAnimationFrame(frame);
 
   function showReveal() {
-    const sp = mon(target), st = D.stacks;
     reveal.replaceChildren(
-      h('h2', sp.name),
-      h('div', ...sp.types.map((t) => h('span.tchip', { style: { background: typeColor(t) } }, t))),
-      h('div.hint', sp.types.map((t, i) => `+${i ? st.subType : st.mainType} ${t}-Stacks`).join(' · ') + ' · Fähigkeit: ' + opText(monPerk(target))),
+      h('div.starters', targets.map((dex) => {
+        const sp = mon(dex);
+        return h('div.card', { '--rc': '#ffd84a' }, h('img', { src: portraitUrl(dex), style: { imageRendering: 'pixelated' } }), h('div.nm', sp.name), h('div', ...sp.types.map((t) => h('span.tchip', { style: { background: typeColor(t) } }, t))), h('small', opText(monPerk(dex))));
+      })),
       h('div.menu', { style: { margin: '10px auto 0' } },
-        h('button.btn.pri', { onclick: () => { cancelAnimationFrame(raf); done(target); } }, 'Los geht’s!'),
+        h('button.btn.pri', { onclick: () => { cancelAnimationFrame(raf); done(targets); } }, 'Los geht’s!'),
         rerolls > 0 ? h('button.btn', { onclick: () => { cancelAnimationFrame(raf); slots(type, done, rerolls - 1); } }, `Nochmal drehen (${rerolls})`) : null));
   }
 }

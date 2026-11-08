@@ -1,25 +1,237 @@
 {
   "_hinweis": "Keystones: alle keystoneEvery Floors und nach jedem Boss eine aus 3 wählen. Gelten für den ganzen Lauf. ops wie bei Items.",
   "keystones": [
-    { "id": "typmeister", "name": "Typ-Meister", "text": "Sehr effektive Treffer: ×2,6 statt ×2", "ops": [{ "op": "effBoost", "v": 0.6 }] },
-    { "id": "recycler", "name": "Recycler", "text": "Verbrauchte Items geben +2 Stacks ihrer Typen für den Floor", "ops": [{ "op": "consumeStacks", "v": 2 }] },
-    { "id": "rucksack", "name": "Großer Rucksack", "text": "+6 Inventarplätze", "ops": [{ "op": "invSlots", "v": 6 }] },
-    { "id": "guertel", "name": "Gürteltasche", "text": "+1 Trainer-Ausrüstungsplatz", "ops": [{ "op": "trainerSlots", "v": 1 }] },
-    { "id": "kaskade", "name": "Status-Kaskade", "text": "Wenn ein Gegner einen Status bekommt: 35 % Chance auf einen zweiten", "ops": [{ "op": "cascade", "v": 0.35 }] },
-    { "id": "schmelze", "name": "Schmelzofen", "text": "Zerlegen gibt +60 % Punkte", "ops": [{ "op": "salvage", "v": 0.6 }] },
-    { "id": "haendler", "name": "Stammkunde", "text": "Shop -25 %, +2 Angebote", "ops": [{ "op": "shopDiscount", "v": 0.25 }, { "op": "shopSlots", "v": 2 }] },
-    { "id": "faenger", "name": "Fängerherz", "text": "Fangchance +60 %", "ops": [{ "op": "catch", "v": 0.6 }] },
-    { "id": "ersthilfe", "name": "Erste Hilfe", "text": "Nach jedem Kampf 30 % KP heilen", "ops": [{ "op": "afterFightHeal", "v": 0.3 }] },
-    { "id": "energie", "name": "Energiefluss", "text": "+1 Energie pro Runde", "ops": [{ "op": "energyGain", "v": 1 }] },
-    { "id": "glaskanone", "name": "Glaskanone", "text": "+45 % Schaden, aber +25 % erlittener Schaden", "ops": [{ "op": "dmgPct", "v": 0.45 }, { "op": "dmgTaken", "v": 0.25 }] },
-    { "id": "dickhaut", "name": "Dicke Haut", "text": "+30 % KP", "ops": [{ "op": "hpPct", "v": 0.3 }] },
-    { "id": "teamgeist", "name": "Teamgeist", "text": "Jedes Team-Pokémon: +5 % alle Werte", "ops": [{ "op": "teamAllPct", "v": 0.05 }] },
-    { "id": "opfergabe", "name": "Opfergabe", "text": "Pokémon einsetzen und opfern wirkt doppelt", "ops": [{ "op": "monUsePct", "v": 1 }] },
-    { "id": "doppeltyp", "name": "Doppelte Natur", "text": "Zweittypen geben volle Stacks", "ops": [{ "op": "subTypeFull", "v": 1 }] },
-    { "id": "juwelier", "name": "Juwelier", "text": "Verbrauchen wirkt 60 % stärker", "ops": [{ "op": "useBoost", "v": 0.6 }] },
-    { "id": "gluecks", "name": "Glückspilz", "text": "+10 % Volltreffer, +25 % Gold", "ops": [{ "op": "crit", "v": 0.1 }, { "op": "gold", "v": 0.25 }] },
-    { "id": "stapler", "name": "Stapelwahn", "text": "Alle Typ-Stacks +1", "ops": [{ "op": "allStacks", "v": 1 }] },
-    { "id": "sammler", "name": "Sammler", "text": "+1 Beute nach jedem Kampf", "ops": [{ "op": "lootExtra", "v": 1 }] },
-    { "id": "lehrer", "name": "Lehrmeister", "text": "Team erhält +1 Level pro Floor", "ops": [{ "op": "levelUp", "v": 1 }] }
+    {
+      "id": "typmeister",
+      "name": "Typ-Meister",
+      "text": "Sehr effektive Treffer: ×2,6 statt ×2",
+      "ops": [
+        {
+          "op": "effBoost",
+          "v": 0.6
+        }
+      ]
+    },
+    {
+      "id": "recycler",
+      "name": "Recycler",
+      "text": "Verbrauchte Items geben +2 Stacks ihrer Typen für den Floor",
+      "ops": [
+        {
+          "op": "consumeStacks",
+          "v": 2
+        }
+      ]
+    },
+    {
+      "id": "rucksack",
+      "name": "Großer Rucksack",
+      "text": "+6 Inventarplätze",
+      "ops": [
+        {
+          "op": "invSlots",
+          "v": 6
+        }
+      ]
+    },
+    {
+      "id": "guertel",
+      "name": "Gürteltasche",
+      "text": "+1 Item-Platz pro Pokémon",
+      "ops": [
+        {
+          "op": "heldSlots",
+          "v": 1
+        }
+      ]
+    },
+    {
+      "id": "kaskade",
+      "name": "Status-Kaskade",
+      "text": "Wenn ein Gegner einen Status bekommt: 35 % Chance auf einen zweiten",
+      "ops": [
+        {
+          "op": "cascade",
+          "v": 0.35
+        }
+      ]
+    },
+    {
+      "id": "schmelze",
+      "name": "Schmelzofen",
+      "text": "Zerlegen gibt +60 % Punkte",
+      "ops": [
+        {
+          "op": "salvage",
+          "v": 0.6
+        }
+      ]
+    },
+    {
+      "id": "haendler",
+      "name": "Stammkunde",
+      "text": "Shop -25 %, +2 Angebote",
+      "ops": [
+        {
+          "op": "shopDiscount",
+          "v": 0.25
+        },
+        {
+          "op": "shopSlots",
+          "v": 2
+        }
+      ]
+    },
+    {
+      "id": "faenger",
+      "name": "Fängerherz",
+      "text": "Fangchance +60 %",
+      "ops": [
+        {
+          "op": "catch",
+          "v": 0.6
+        }
+      ]
+    },
+    {
+      "id": "ersthilfe",
+      "name": "Erste Hilfe",
+      "text": "Nach jedem Kampf 30 % KP heilen",
+      "ops": [
+        {
+          "op": "afterFightHeal",
+          "v": 0.3
+        }
+      ]
+    },
+    {
+      "id": "energie",
+      "name": "Energiefluss",
+      "text": "+1 Energie pro Runde",
+      "ops": [
+        {
+          "op": "energyGain",
+          "v": 1
+        }
+      ]
+    },
+    {
+      "id": "glaskanone",
+      "name": "Glaskanone",
+      "text": "+45 % Schaden, aber +25 % erlittener Schaden",
+      "ops": [
+        {
+          "op": "dmgPct",
+          "v": 0.45
+        },
+        {
+          "op": "dmgTaken",
+          "v": 0.25
+        }
+      ]
+    },
+    {
+      "id": "dickhaut",
+      "name": "Dicke Haut",
+      "text": "+30 % KP",
+      "ops": [
+        {
+          "op": "hpPct",
+          "v": 0.3
+        }
+      ]
+    },
+    {
+      "id": "teamgeist",
+      "name": "Teamgeist",
+      "text": "Jedes Team-Pokémon: +5 % alle Werte",
+      "ops": [
+        {
+          "op": "teamAllPct",
+          "v": 0.05
+        }
+      ]
+    },
+    {
+      "id": "opfergabe",
+      "name": "Opfergabe",
+      "text": "Pokémon einsetzen und opfern wirkt doppelt",
+      "ops": [
+        {
+          "op": "monUsePct",
+          "v": 1
+        }
+      ]
+    },
+    {
+      "id": "doppeltyp",
+      "name": "Doppelte Natur",
+      "text": "Zweittypen geben volle Stacks",
+      "ops": [
+        {
+          "op": "subTypeFull",
+          "v": 1
+        }
+      ]
+    },
+    {
+      "id": "juwelier",
+      "name": "Juwelier",
+      "text": "Verbrauchen wirkt 60 % stärker",
+      "ops": [
+        {
+          "op": "useBoost",
+          "v": 0.6
+        }
+      ]
+    },
+    {
+      "id": "gluecks",
+      "name": "Glückspilz",
+      "text": "+10 % Volltreffer, +25 % Gold",
+      "ops": [
+        {
+          "op": "crit",
+          "v": 0.1
+        },
+        {
+          "op": "gold",
+          "v": 0.25
+        }
+      ]
+    },
+    {
+      "id": "stapler",
+      "name": "Stapelwahn",
+      "text": "Alle Typ-Stacks +1",
+      "ops": [
+        {
+          "op": "allStacks",
+          "v": 1
+        }
+      ]
+    },
+    {
+      "id": "sammler",
+      "name": "Sammler",
+      "text": "+1 Beute nach jedem Kampf",
+      "ops": [
+        {
+          "op": "lootExtra",
+          "v": 1
+        }
+      ]
+    },
+    {
+      "id": "lehrer",
+      "name": "Lehrmeister",
+      "text": "Team erhält +50 % Erfahrung",
+      "ops": [
+        {
+          "op": "expMult",
+          "v": 0.5
+        }
+      ]
+    }
   ]
 }

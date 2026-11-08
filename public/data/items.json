@@ -1,5 +1,5 @@
 {
- "_hinweis": "Items. rarity 1–5. kind: held/gem/stone/berry/potion/ball/tm/candy/fragment/treasure. stacks = Typ-Stacks solange angelegt. equip = Ops solange angelegt (hp/atk/def/spa/spd/spe skalieren mit Item-Stufe). use = Verbrauchen im Kampf (heal = Anteil max. KP, buffs = Ops für den Kampf, floorStacks = Typ-Stacks für den Floor, burst = Typ-Entladung Stärke, attack = Attacke). trigger = löst angelegt automatisch aus (lowHp/status). salvage = permanente Punkte beim Zerlegen (all = alle Werte, aff = Affinität für die Typen des Items, gold = Gold-Bonus). weight = Drop-Häufigkeit, minFloor = frühester Floor.",
+ "_hinweis": "Items. rarity 1–5. kind: held/gem/stone/berry/potion/ball/tm/candy/fragment/treasure. stacks = Typ-Stacks solange angelegt. equip = Ops solange angelegt (wirken nur für das tragende Pokémon, außer gold/catch/lootExtra/salvage/shop…) (hp/atk/def/spa/spd/spe skalieren mit Item-Stufe). use = Verbrauchen im Kampf (heal = Anteil max. KP, buffs = Ops für den Kampf, floorStacks = Typ-Stacks für den Floor, burst = Typ-Entladung Stärke, attack = Attacke). trigger = löst angelegt automatisch aus (lowHp/status). salvage = permanente Punkte beim Zerlegen (all = alle Werte, aff = Affinität für die Typen des Items, gold = Gold-Bonus). weight = Drop-Häufigkeit, minFloor = frühester Floor.",
  "items": [
   {
    "id": "silk-scarf",
@@ -1378,8 +1378,8 @@
    "weight": 2,
    "equip": [
     {
-     "op": "levelUp",
-     "v": 2
+     "op": "expMult",
+     "v": 0.5
     }
    ],
    "salvage": {
@@ -1456,8 +1456,8 @@
      "v": 1
     },
     {
-     "op": "holderShare",
-     "v": 0.6
+     "op": "allPct",
+     "v": 0.3
     }
    ],
    "salvage": {
@@ -1465,7 +1465,7 @@
     "spd": 2
    },
    "onlyMon": true,
-   "desc": "Verhindert Entwicklung, Träger gibt 60 % mehr Werte ans Team."
+   "desc": "Verhindert die Entwicklung, dafür +30 % alle Werte für den Träger."
   },
   {
    "id": "toxic-orb",

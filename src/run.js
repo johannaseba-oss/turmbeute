@@ -1,8 +1,8 @@
 // Lauf-Zustand: Team, Inventar, Gold, permanente Werte, Floors, Beute, Shop, Zerlegen, Level & Entwicklung.
 import { D, mon, itemDef, ri, rnd, pick, weighted, uid, clamp } from './data.js';
-import { invSize, trainerSlotCount, keystoneOps, sumOps, g, computeStats, allOps, STATS, equipOps } from './mods.js';
+import { baseStats, invSize, heldSlots, keystoneOps, sumOps, g, computeStats, allOps, STATS, equipOps, expFor, heldOf } from './mods.js';
 
-const SAVE = 'turmbeute.run.v1', META = 'turmbeute.meta.v1';
+const SAVE = 'turmbeute.run.v2', META = 'turmbeute.meta.v1';
 // ?nosave: Testläufe (Bot) schreiben nichts in den Speicher
 const NOSAVE = typeof location !== 'undefined' && location.search.includes('nosave');
 export let run = null;
@@ -60,8 +60,6 @@ export const freeSlots = () => run.inv.filter((x) => !x).length;
 export function ensureInv() {
   const n = invSize(run);
   while (run.inv.length < n) run.inv.push(null);
-  const t = trainerSlotCount(run);
-  while (run.trainerEq.length < t) run.trainerEq.push(null);
 }
 // 3 Meisterball-Fragmente → Meisterball
 function fragments() {
@@ -81,94 +79,125 @@ export function takeOne(idx) {
 }
 
 // --- Team ------------------------------------------------------------------
-export function makeMon(dex, level) { return { uid: uid(), dex, level, held: null, used: false }; }
+export function makeMon(dex, level) {
+  const m = { uid: uid(), dex, level, exp: expFor(mon(dex).growth, level), held: [], used: false, fainted: false, hp: null };
+  return m;
+}
+export const monStats = (m, extra = []) => computeStats(run, extra, m).stats;
+export const monMax = (m) => monStats(m).hp;
+// KP-Stand absichern (neues Pokémon = volle KP, nie über Maximum)
+export function fixHp(m) {
+  const max = monMax(m);
+  if (m.hp == null) m.hp = max;
+  m.hp = Math.max(0, Math.min(max, m.hp));
+  return max;
+}
+export const lead = () => run.team[0];
+export const ableTeam = () => run.team.filter((m) => !m.fainted);
 export function addMon(m) {
   if (run.team.length >= D.B.teamMax) return false;
   run.team.push(m);
+  fixHp(m);
   return true;
 }
 export function releaseMon(idx) {
   const m = run.team.splice(idx, 1)[0];
-  if (m?.held && !addItem(m.held)) run.events.push({ kind: 'toast', text: `${itemName(m.held)} ging verloren (Inventar voll)` });
+  for (const it of heldOf(m)) if (!addItem(it)) run.events.push({ kind: 'toast', text: `${itemName(it)} ging verloren (Inventar voll)` });
+  ensureLeadAble();
   return m;
 }
-
-export function canEquipOn(inst, target) {
-  const def = itemDef(inst.id);
-  if (!['held', 'gem', 'stone', 'tm', 'berry'].includes(def.kind)) return false;
-  if (def.onlyMon && target === 'trainer') return false;
-  return true;
+// Anführer muss kampffähig sein
+export function ensureLeadAble() {
+  const i = run.team.findIndex((m) => !m.fainted);
+  if (i > 0) run.team.unshift(...run.team.splice(i, 1));
 }
-// Item anlegen: target = {mon: idx} oder {trainer: idx}
-export function equip(invIdx, target) {
-  const inst = run.inv[invIdx];
-  if (!inst) return;
-  const def = itemDef(inst.id);
-  if (target.mon != null) {
-    const m = run.team[target.mon];
-    // Entwicklungsstein: entwickelt sofort, wenn passend
-    if (def.kind === 'stone') {
-      const ev = mon(m.dex).evos.find((e) => e.stone === def.stone);
-      if (ev && !heldNoEvolve(m)) { takeOne(invIdx); evolve(m, ev.to); return 'evolved'; }
-    }
-    const old = m.held;
-    m.held = takeOne(invIdx);
-    if (old) addItem(old);
-  } else {
-    const old = run.trainerEq[target.trainer];
-    run.trainerEq[target.trainer] = takeOne(invIdx);
-    if (old) addItem(old);
+// Heilen: frac = Anteil der max. KP, revive = Besiegte wiederbeleben
+export function healTeam(frac, revive = false) {
+  for (const m of run.team) {
+    if (m.fainted && !revive) continue;
+    const max = fixHp(m);
+    if (m.fainted) { m.fainted = false; m.hp = 0; }
+    m.hp = Math.min(max, Math.round(m.hp + max * frac));
   }
+}
+
+export function canEquip(inst) {
+  return ['held', 'gem', 'stone', 'tm', 'berry'].includes(itemDef(inst.id).kind);
+}
+// Item an Pokémon monIdx anlegen; ist es voll, ersetzt es Platz replace (das alte geht ins Inventar)
+export function equip(invIdx, monIdx, replace = null) {
+  const inst = run.inv[invIdx];
+  const m = run.team[monIdx];
+  if (!inst || !m) return;
+  const def = itemDef(inst.id);
+  // Entwicklungsstein: entwickelt sofort, wenn passend
+  if (def.kind === 'stone') {
+    const ev = mon(m.dex).evos.find((e) => e.stone === def.stone);
+    if (ev && !noEvolve(m)) { takeOne(invIdx); evolve(m, ev.to); return 'evolved'; }
+  }
+  const before = monMax(m);
+  if (m.held.length >= heldSlots(run)) {
+    if (replace == null) return 'full';
+    const [old] = m.held.splice(replace, 1);
+    m.held.push(takeOne(invIdx));
+    addItem(old);
+  } else m.held.push(takeOne(invIdx));
+  m.hp += Math.max(0, monMax(m) - before);
+  fixHp(m);
   return 'ok';
 }
-export function unequip(target) {
+export function unequip(monIdx, slot) {
   if (freeSlots() <= 0) return false;
-  if (target.mon != null) { const m = run.team[target.mon]; if (!m.held) return false; addItem(m.held); m.held = null; }
-  else { const it = run.trainerEq[target.trainer]; if (!it) return false; addItem(it); run.trainerEq[target.trainer] = null; }
+  const m = run.team[monIdx];
+  const [it] = m.held.splice(slot, 1);
+  if (!it) return false;
+  addItem(it);
+  fixHp(m);
   return true;
 }
-const heldNoEvolve = (m) => m.held && equipOps(m.held).some((o) => o.op === 'noEvolve');
+const noEvolve = (m) => heldOf(m).some((it) => equipOps(it).some((o) => o.op === 'noEvolve'));
 
 export function evolve(m, to) {
-  const from = m.dex;
+  const from = m.dex, before = monMax(m);
   m.dex = to;
+  m.hp += Math.max(0, monMax(m) - before);
   run.events.push({ kind: 'evolve', from, to, uid: m.uid });
 }
-// Level-Ups nach dem Floor (inkl. Entwicklungen)
-export function levelTeam(extra = 0) {
-  const ks = sumOps(keystoneOps(run));
-  for (const m of run.team) {
-    const egg = m.held ? equipOps(m.held).filter((o) => o.op === 'levelUp').reduce((s, o) => s + o.v, 0) : 0;
-    giveLevels(m, D.B.level.perFloor + g(ks, 'levelUp') + egg + extra);
+// Erfahrung geben: Level-Ups (ohne Obergrenze) und Entwicklungen
+export function giveExp(m, xp) {
+  m.exp += Math.round(xp);
+  const gr = mon(m.dex).growth;
+  let ups = 0;
+  while (m.exp >= expFor(gr, m.level + 1)) {
+    const before = monMax(m);
+    m.level++; ups++;
+    if (!m.fainted) m.hp += Math.max(0, monMax(m) - before);
+    if (!noEvolve(m)) {
+      const ev = mon(m.dex).evos.find((e) => e.level && m.level >= e.level);
+      if (ev) evolve(m, ev.to);
+    }
   }
+  if (ups) run.events.push({ kind: 'levelup', uid: m.uid, level: m.level, ups });
+  return ups;
 }
-export function giveLevels(m, n) {
-  m.level = Math.min(D.B.level.max, m.level + n);
-  if (heldNoEvolve(m)) return;
-  for (let k = 0; k < 3; k++) {
-    const ev = mon(m.dex).evos.find((e) => e.level && m.level >= e.level);
-    if (!ev) break;
-    evolve(m, ev.to);
-  }
-}
+export function giveLevels(m, n) { giveExp(m, expFor(mon(m.dex).growth, m.level + n) - m.exp); }
 
 // --- Neuer Lauf ----------------------------------------------------------------
-export function newRun(starterDex) {
+export function newRun(dexes) {
   const B = D.B;
   run = {
-    v: 1, floor: 1, fight: 0, fights: 1, phase: 'floor', gold: B.startGold,
+    v: 2, floor: 1, fight: 0, fights: 1, phase: 'floor', gold: B.startGold,
     perm: Object.fromEntries(STATS.map((s) => [s, 0])), aff: {},
-    team: [makeMon(starterDex, B.level.start)], inv: [], trainerEq: [], keystones: [],
-    floorOps: [], floorStacks: {}, hp: 1, battle: null, shop: null, loot: null, events: [],
+    team: [], inv: [], keystones: [],
+    floorOps: [], floorStacks: {}, battle: null, shop: null, loot: null, events: [],
     stats: { kills: 0, caught: 0, salvaged: 0 }, ksOffer: null,
   };
+  for (const dex of dexes) addMon(makeMon(dex, B.level.start));
   ensureInv();
   for (const id of B.startItems) addItem(makeItem(id, 1));
-  run.hp = maxHp();
   startFloor();
   return run;
 }
-export const maxHp = () => computeStats(run).stats.hp;
 export const isBossFloor = (f) => f % D.B.floor.bossEvery === 0;
 
 export function startFloor() {
@@ -191,26 +220,29 @@ function spawnPool(floor, boss) {
   }
   return D.pokemon.filter((p) => !p.legendary && !p.mythical && p.stage <= ms && (p.stage >= ms - 1 || p.evos.length === 0 || floor < 6));
 }
+export function enemyLevel(floor, boss = false) {
+  const E = D.B.enemy;
+  return Math.max(1, Math.round(E.levelBase + (floor - 1) * E.levelPerFloor) + ri(0, 1) + (boss ? E.boss.level : 0));
+}
 export function makeEnemy(floor, { boss = false, elite = false, dex = null } = {}) {
   const E = D.B.enemy;
   const pool = spawnPool(floor, boss);
   const W = D.B.spawn.rarityWeights;
   const sp = dex ? mon(dex) : weighted(pool, (p) => (W[p.rarity] ?? 1) * (p.rarity === 'gewoehnlich' ? 1 : 1 + floor * D.B.spawn.rareGrowth));
-  const f = floor - 1, grow = (1 + E.growLin * f + E.growQuad * f * f) * Math.pow(E.growExp, f);
-  const k = grow * (elite ? E.eliteMult : 1) * (E.early[floor - 1] ?? 1);
-  const [bh, ba, bd, bs, bsd, bsp] = sp.base;
+  const level = enemyLevel(floor, boss);
+  const k = E.statMult * Math.pow(E.growExp, floor - 1) * (elite ? E.eliteMult : 1) * (E.early[floor - 1] ?? 1);
   const bm = boss ? E.boss : { hp: 1, atk: 1, def: 1 };
-  const hp = Math.round((E.hpBase + bh * E.hp) * k * bm.hp);
-  const e = {
-    uid: uid(), dex: sp.dex, name: sp.name, types: sp.types, level: Math.min(100, 2 + floor * 2 + (boss ? 5 : 0)),
+  const st = baseStats(sp.dex, level);
+  const hp = Math.max(1, Math.round(st.hp * k * E.hpMult * bm.hp));
+  return {
+    uid: uid(), dex: sp.dex, name: sp.name, types: sp.types, level,
     hp, max: hp,
-    atk: Math.round((E.atkBase + ba * E.atk) * k * bm.atk), def: Math.round((E.defBase + bd * E.def) * k * bm.def),
-    spa: Math.round((E.spaBase + bs * E.spa) * k * bm.atk), spd: Math.round((E.spdBase + bsd * E.spd) * k * bm.def),
-    spe: Math.round(bsp * E.spe), move: sp.move, boss, elite,
+    atk: Math.round(st.atk * k * bm.atk), def: Math.round(st.def * k * bm.def),
+    spa: Math.round(st.spa * k * bm.atk), spd: Math.round(st.spd * k * bm.def),
+    spe: st.spe, move: sp.move, boss, elite,
     st: {}, defDown: 0, buff: 0, guard: 0, anger: 0, flinch: false,
     pattern: patternFor(sp, boss), pi: 0,
   };
-  return e;
 }
 function patternFor(sp, boss) {
   const [, a, d, s, sd, spe] = sp.base;
@@ -268,7 +300,7 @@ export function salvageGain(inst) {
   }
   // Typ-Items geben immer etwas Affinität
   if (!def.salvage?.aff) for (const t of Object.keys(def.stacks || {})) gain.aff[t] = (gain.aff[t] || 0) + ((inst.r || 1) >= 3 ? 1 : 0);
-  for (const s of Object.keys(gain.stats)) gain.stats[s] = Math.max(1, Math.round(gain.stats[s]));
+  for (const s of Object.keys(gain.stats)) gain.stats[s] = Math.max(1, Math.round(gain.stats[s] * S.statScale));
   for (const t of Object.keys(gain.aff)) if (!gain.aff[t]) delete gain.aff[t];
   return gain;
 }

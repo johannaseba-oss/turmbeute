@@ -1,7 +1,7 @@
-// Detail-Sheets: Item, Team-Pokémon, Trainer-Ausrüstung, Typ-Stacks, Werte.
+// Detail-Sheets: Item, Team-Pokémon (Werte, EP, Items), Typ-Stacks, Werte.
 import { D, mon, itemDef, portraitUrl, itemIconUrl, typeColor, rarityColor, rarityName } from '../data.js';
-import { computeStats, equipOps, itemStacks, opText, STAT_NAME, STATS, monPerk, monShare, g } from '../mods.js';
-import { run, salvageGain, sellPrice, canEquipOn, itemPrice } from '../run.js';
+import { computeStats, equipOps, itemStacks, opText, STAT_NAME, STATS, monPerk, g, heldOf, heldSlots, expFor } from '../mods.js';
+import { run, salvageGain, sellPrice, canEquip, itemPrice, fixHp } from '../run.js';
 import { B, alive, catchChance, useEffect, monMove, specialCost } from '../combat.js';
 import { h, openSheet, closeSheet, fmt } from './dom.js';
 import { G } from '../game.js';
@@ -75,10 +75,11 @@ export function itemSheet(idx) {
     } else if (useEffect(inst) && !def.restOnly) btns.push(h('button.btn.purple', { onclick: () => { closeSheet(); G.act('item', { idx }); } }, 'Verbrauchen', h('small', 'kostet die Aktion')));
     btns.push(h('button.btn', { onclick: closeSheet }, 'Zurück'));
   } else {
-    if (canEquipOn(inst, 'mon') || canEquipOn(inst, 'trainer')) btns.push(h('button.btn.pri', { onclick: () => equipPicker(idx) }, 'Anlegen'));
+    if (canEquip(inst)) btns.push(h('button.btn.pri', { onclick: () => equipPicker(idx) }, 'Anlegen'));
+    if (def.kind === 'potion' && def.use?.heal) btns.push(h('button.btn.pri', { onclick: () => monPicker(idx, (i) => G.useOn(idx, i)) }, 'Benutzen'));
     if (def.kind === 'candy') btns.push(h('button.btn.pri', { onclick: () => candyPicker(idx) }, 'Benutzen'));
     btns.push(h('button.btn.purple', { onclick: () => { closeSheet(); G.salvage(idx); } }, 'Zerlegen', h('small', 'permanente Werte')));
-    if (run.phase === 'rest') btns.push(h('button.btn.gold', { onclick: () => { closeSheet(); G.sell(idx); } }, `Verkaufen`, h('small', `+${sellPrice(inst)} Gold`)));
+    btns.push(h('button.btn.gold', { onclick: () => { closeSheet(); G.sell(idx); } }, `Verkaufen`, h('small', `+${sellPrice(inst)} Gold`)));
     btns.push(h('button.btn.warn', { onclick: () => { closeSheet(); G.discard(idx); } }, 'Wegwerfen'));
   }
   openSheet(itemHead(inst), itemInfo(inst), h('div.btns', btns));
@@ -86,16 +87,22 @@ export function itemSheet(idx) {
 
 function equipPicker(idx) {
   const inst = run.inv[idx];
-  const def = itemDef(inst.id);
+  const def = itemDef(inst.id), max = heldSlots(run);
   const targets = run.team.map((m, i) => {
     const sp = mon(m.dex);
     const evo = def.kind === 'stone' && sp.evos.find((e) => e.stone === def.stone);
-    return h('button.btn', { onclick: () => { closeSheet(); G.equip(idx, { mon: i }); } },
+    const n = heldOf(m).length;
+    return h('button.btn', { onclick: () => { closeSheet(); G.equip(idx, i); } },
       h('img', { src: portraitUrl(m.dex), style: { width: '28px', height: '28px', imageRendering: 'pixelated', verticalAlign: 'middle', marginRight: '6px' } }),
-      sp.name, h('small', evo ? `✨ entwickelt sich zu ${mon(evo.to).name}` : m.held ? `ersetzt ${itemDef(m.held.id).name}` : 'frei'));
+      sp.name, h('small', evo ? `✨ entwickelt sich zu ${mon(evo.to).name}` : `${n}/${max} Items${n >= max ? ' – ersetzt eins' : ''}`));
   });
-  if (canEquipOn(inst, 'trainer')) run.trainerEq.forEach((t, i) => targets.push(h('button.btn', { onclick: () => { closeSheet(); G.equip(idx, { trainer: i }); } }, `Trainer-Platz ${i + 1}`, h('small', t ? `ersetzt ${itemDef(t.id).name}` : 'frei'))));
-  openSheet(itemHead(inst), h('div.hint', 'Wo anlegen?'), h('div.btns', targets, h('button.btn', { onclick: () => itemSheet(idx) }, 'Zurück')));
+  openSheet(itemHead(inst), h('div.hint', 'An welches Pokémon? Items wirken für ihren Träger, Typ-Stacks fürs ganze Team.'), h('div.btns', targets, h('button.btn', { onclick: () => itemSheet(idx) }, 'Zurück')));
+}
+function monPicker(idx, pick) {
+  openSheet(itemHead(run.inv[idx]), h('div.hint', 'Welches Pokémon?'), h('div.btns', run.team.map((m, i) => {
+    const max = fixHp(m);
+    return h('button.btn', { disabled: m.fainted, onclick: () => { closeSheet(); pick(i); } }, mon(m.dex).name, h('small', m.fainted ? 'K.O.' : `KP ${m.hp}/${max}`));
+  })));
 }
 function candyPicker(idx) {
   openSheet(itemHead(run.inv[idx]), h('div.hint', 'Welches Pokémon?'), h('div.btns', run.team.map((m, i) => h('button.btn', { onclick: () => { closeSheet(); G.candy(idx, i); } }, mon(m.dex).name, h('small', `Lv ${m.level}`)))));
@@ -105,34 +112,34 @@ function candyPicker(idx) {
 export function monSheet(i) {
   const m = run.team[i];
   if (!m) return;
-  const sp = mon(m.dex), perk = monPerk(m.dex), share = monShare(run, m, i), mv = monMove(m);
+  const sp = mon(m.dex), perk = monPerk(m.dex), mv = monMove(m), { stats } = computeStats(run, [], m), max = fixHp(m);
+  const e0 = expFor(sp.growth, m.level), e1 = expFor(sp.growth, m.level + 1);
   const b = B(), inBattle = run.phase === 'battle' && b;
   const st = D.stacks;
   const btns = [];
   if (inBattle) {
-    btns.push(h('button.btn.pri', { disabled: m.used || b.busy, onclick: () => { closeSheet(); G.act('mon', { idx: i }); } }, 'Einsetzen', h('small', m.used ? 'erschöpft bis nächster Floor' : `${mv.name} (${mv.type})`)));
+    btns.push(h('button.btn.pri', { disabled: m.used || m.fainted || b.busy, onclick: () => { closeSheet(); G.act('mon', { idx: i }); } }, 'Einsetzen', h('small', m.used ? 'erschöpft bis nächster Floor' : `${mv.name} (${mv.type})`)));
     btns.push(h('button.btn.warn', { disabled: run.team.length <= 1 || b.busy, onclick: () => confirmSac(i) }, 'Opfern', h('small', 'massiver Floor-Boost')));
-    if (i > 0) btns.push(h('button.btn', { disabled: b.busy, onclick: () => { closeSheet(); G.act('lead', { idx: i }); } }, 'Als Anführer', h('small', 'kostet die Aktion')));
+    if (i > 0) btns.push(h('button.btn', { disabled: b.busy || m.fainted, onclick: () => { closeSheet(); G.act('lead', { idx: i }); } }, 'Als Anführer', h('small', 'kostet die Aktion')));
   } else {
-    if (i > 0) btns.push(h('button.btn.pri', { onclick: () => { closeSheet(); G.setLead(i); } }, 'Als Anführer'));
-    if (m.held) btns.push(h('button.btn', { onclick: () => { closeSheet(); G.unequip({ mon: i }); } }, 'Item abnehmen'));
+    if (i > 0) btns.push(h('button.btn.pri', { disabled: m.fainted, onclick: () => { closeSheet(); G.setLead(i); } }, 'Als Anführer'));
     if (run.team.length > 1) btns.push(h('button.btn.warn', { onclick: () => confirmRelease(i) }, 'Freilassen'));
   }
   btns.push(h('button.btn', { onclick: closeSheet }, 'Zurück'));
   const evo = sp.evos.map((e) => `${mon(e.to).name} (${e.level ? 'Lv ' + e.level : itemDef(e.stone)?.name || e.stone})`).join(', ');
   openSheet(
     h('div.sh-head', h('div.big', h('img.px', { src: portraitUrl(m.dex) })),
-      h('div', h('h3', sp.name + (i === 0 ? ' ♛' : '')), h('div.sub', `Lv ${m.level}${sp.legendary ? ' · Legendär' : ''}`), h('div', ...sp.types.map(tchip)))),
+      h('div', h('h3', sp.name + (i === 0 ? ' ♛' : '')), h('div.sub', `Lv ${m.level} · KP ${m.fainted ? 'K.O.' : m.hp + '/' + max} · EP ${m.exp - e0}/${e1 - e0}${sp.legendary ? ' · Legendär' : ''}`), h('div', ...sp.types.map(tchip)))),
+    heldPanel(m, i),
     h('ul.fx',
       li('Passiv', 'h'),
       li(sp.types.map((t, k) => `+${k === 0 ? st.mainType : st.subType} ${t}-Stacks`).join(', ')),
       li('Fähigkeit: ' + opText(perk), 'on'),
-      li('Werte-Anteil' + (i === 0 ? ' (Anführer ×' + D.B.leadShare + ')' : ''), 'h'),
-      li(STATS.map((s) => `${STAT_NAME[s]} +${Math.round(share[s])}`).join(' · ')),
-      li('Einsetzen', 'h'), li(`${mv.name} · ${mv.type} · Stärke ${Math.round(mv.power * 60)}`),
-      i === 0 ? li(`Anführer: Angriff neutral mit ${sp.types[0]}-Boni, Spezial = ${sp.move.name} (${sp.move.type})`) : null,
+      li('Werte (mit eigenen Items)', 'h'),
+      li(STATS.map((s) => `${STAT_NAME[s]} ${fmt(stats[s])}`).join(' · ')),
+      li('Spezial / Einsetzen', 'h'), li(`${mv.name} · ${mv.type} · Stärke ${Math.round(mv.power * 60)}`),
       evo ? [li('Entwicklung', 'h'), li(evo)] : null,
-      m.held ? [li('Trägt', 'h'), li(`${itemDef(m.held.id).name}: ` + [...Object.entries(itemStacks(m.held)).map(([t, n]) => `+${n} ${t}`), ...equipOps(m.held).map(opText)].join(', '))] : null),
+      ...heldOf(m).map((it) => li(`${itemDef(it.id).name}: ` + [...Object.entries(itemStacks(it)).map(([t, n]) => `+${n} ${t}`), ...equipOps(it).map(opText)].join(', ')))),
     h('div.btns', btns));
 }
 function confirmSac(i) {
@@ -149,12 +156,15 @@ function confirmRelease(i) {
   openSheet(h('h3', `${sp.name} freilassen?`), h('div.btns', h('button.btn.warn', { onclick: () => { closeSheet(); G.release(i); } }, 'Freilassen'), h('button.btn', { onclick: () => monSheet(i) }, 'Abbrechen')));
 }
 
-export function gearSheet(i) {
-  const inst = run.trainerEq[i];
-  if (!inst) return openSheet(h('h3', `Trainer-Platz ${i + 1}`), h('div.hint', 'Ziehe ein Item hierher oder tippe ein Item im Inventar → Anlegen. Trainer-Plätze tragen Items, die nicht an ein Pokémon gebunden sind.'), h('div.btns', h('button.btn', { onclick: closeSheet }, 'OK')));
-  const btns = [h('button.btn', { onclick: closeSheet }, 'Zurück')];
-  if (run.phase !== 'battle') btns.unshift(h('button.btn.pri', { onclick: () => { closeSheet(); G.unequip({ trainer: i }); } }, 'Abnehmen'));
-  openSheet(itemHead(inst), itemInfo(inst), h('div.btns', btns));
+// Item-Plätze des Pokémon: antippen = abnehmen (außerhalb des Kampfes)
+function heldPanel(m, i) {
+  const max = heldSlots(run), canEdit = run.phase !== 'battle';
+  return h('div.heldrow', ...Array.from({ length: max }, (_, k) => {
+    const it = heldOf(m)[k];
+    if (!it) return h('div.slot.empty');
+    return h('div.slot.item', { '--rc': rarityColor(it.r), onclick: () => { if (!canEdit) return; closeSheet(); G.unequip(i, k); } },
+      h('img.icon', { src: itemIconUrl(it.id) }), h('span.lv', 'St.' + it.lvl));
+  }), h('div.hint', canEdit ? 'Item antippen = abnehmen' : 'Im Kampf nicht änderbar'));
 }
 
 // --- Stacks-Übersicht ---------------------------------------------------------------

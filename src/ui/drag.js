@@ -1,5 +1,5 @@
-// Ziehen & Ablegen außerhalb des Kampfes: Item auf Pokémon/Trainer-Platz = anlegen, auf Inventarplatz = umsortieren.
-import { run, canEquipOn } from '../run.js';
+// Ziehen & Ablegen außerhalb des Kampfes: Item auf Pokémon = anlegen, auf Inventarplatz = umsortieren.
+import { run, canEquip } from '../run.js';
 import { h } from './dom.js';
 import { itemIconUrl } from '../data.js';
 import { G } from '../game.js';
@@ -36,7 +36,6 @@ function drop(idx, t) {
     return G.refresh();
   }
   const i = +t.dataset.i;
-  if (t.dataset.drop === 'mon' && canEquipOn(inst, 'mon')) return G.equip(idx, { mon: i });
-  if (t.dataset.drop === 'trainer' && canEquipOn(inst, 'trainer')) return G.equip(idx, { trainer: i });
+  if (t.dataset.drop === 'mon' && canEquip(inst)) return G.equip(idx, i);
   G.toastNo('Das kann dort nicht angelegt werden.');
 }
