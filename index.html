@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#120f1f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>Turmbeute</title>
+</head>
+<body>
+  <div id="app">
+    <header id="top">
+      <div id="floorinfo"></div>
+      <div id="gold"></div>
+      <button id="speed" class="ghost" title="Tempo">×1</button>
+      <button id="menu-btn" class="ghost" title="Menü">☰</button>
+    </header>
+    <section id="player"></section>
+    <section id="view">
+      <canvas id="stage"></canvas>
+      <div id="panel"></div>
+      <div id="banner"></div>
+      <div id="log"></div>
+    </section>
+    <section id="actions"></section>
+    <section id="stacks"></section>
+    <section id="team"></section>
+    <section id="bag">
+      <div id="gear"></div>
+      <div id="inv"></div>
+    </section>
+  </div>
+  <div id="sheet" class="hidden"><div class="sheet-card"></div></div>
+  <div id="overlay" class="hidden"></div>
+  <div id="toasts"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+{
+  "_hinweis": "Typ-Stacks. Quellen: Team-Pokémon (Haupttyp mainType, Zweittyp subType Stacks), angelegte Items (stacks), Floor-Boni. per = Effekt je Stack (wird mit Typ-Affinität verstärkt: +affinityPct je Punkt). tiers = Schwellen ab 'at' Stacks. Ops siehe src/mods.js (OPS).",
+  "mainType": 2,
+  "subType": 1,
+  "affinityPct": 0.12,
+  "types": {
+    "Feuer": {
+      "per": [{ "op": "typeDmg", "type": "Feuer", "v": 0.05 }, { "op": "burnChance", "v": 0.03 }],
+      "tiers": [
+        { "at": 4, "text": "Verbrennung macht doppelten Schaden", "ops": [{ "op": "burnDmg", "v": 1 }] },
+        { "at": 8, "text": "Verbrannte Gegner verlieren 30 % Abwehr", "ops": [{ "op": "burnArmor", "v": 0.3 }] },
+        { "at": 12, "text": "Alle Gegner starten verbrannt", "ops": [{ "op": "startStatus", "status": "burn", "v": 1 }] }
+      ]
+    },
+    "Wasser": {
+      "per": [{ "op": "typeDmg", "type": "Wasser", "v": 0.05 }, { "op": "regen", "v": 0.006 }],
+      "tiers": [
+        { "at": 4, "text": "Heilung wirkt 30 % stärker", "ops": [{ "op": "healPct", "v": 0.3 }] },
+        { "at": 8, "text": "Regen-Aura: 4 % KP pro Runde, Wasser +30 %", "ops": [{ "op": "regen", "v": 0.04 }, { "op": "typeDmg", "type": "Wasser", "v": 0.3 }] },
+        { "at": 12, "text": "Flutwelle: Treffer spülen 25 % auf alle Gegner", "ops": [{ "op": "chain", "v": 0.25 }] }
+      ]
+    },
+    "Elektro": {
+      "per": [{ "op": "typeDmg", "type": "Elektro", "v": 0.05 }, { "op": "paraChance", "v": 0.03 }],
+      "tiers": [
+        { "at": 4, "text": "+1 Energie zu Kampfbeginn", "ops": [{ "op": "energyStart", "v": 1 }] },
+        { "at": 8, "text": "Kettenblitz: 40 % Schaden springt auf alle Gegner", "ops": [{ "op": "chain", "v": 0.4 }] },
+        { "at": 12, "text": "Paralysierte Gegner nehmen +50 % Schaden", "ops": [{ "op": "vsPara", "v": 0.5 }] }
+      ]
+    },
+    "Pflanze": {
+      "per": [{ "op": "typeDmg", "type": "Pflanze", "v": 0.05 }, { "op": "lifesteal", "v": 0.015 }],
+      "tiers": [
+        { "at": 4, "text": "Egelsamen: Gegner verlieren 3 % KP pro Runde, du heilst", "ops": [{ "op": "leech", "v": 0.03 }] },
+        { "at": 8, "text": "Schlafpuder: 15 % Schlaf-Chance", "ops": [{ "op": "sleepChance", "v": 0.15 }] },
+        { "at": 12, "text": "Egelsamen ×3", "ops": [{ "op": "leech", "v": 0.06 }] }
+      ]
+    },
+    "Eis": {
+      "per": [{ "op": "typeDmg", "type": "Eis", "v": 0.05 }, { "op": "freezeChance", "v": 0.02 }],
+      "tiers": [
+        { "at": 4, "text": "Gegner -20 % Initiative", "ops": [{ "op": "enemySpe", "v": -0.2 }] },
+        { "at": 8, "text": "Eingefrorene nehmen +60 % Schaden", "ops": [{ "op": "vsFreeze", "v": 0.6 }] },
+        { "at": 12, "text": "Hagel: 4 % KP-Schaden pro Runde an alle Gegner", "ops": [{ "op": "storm", "v": 0.04 }] }
+      ]
+    },
+    "Kampf": {
+      "per": [{ "op": "typeDmg", "type": "Kampf", "v": 0.05 }, { "op": "atkPct", "v": 0.03 }],
+      "tiers": [
+        { "at": 4, "text": "20 % Chance auf Doppelschlag", "ops": [{ "op": "doubleHit", "v": 0.2 }] },
+        { "at": 8, "text": "Ignoriert 30 % Abwehr", "ops": [{ "op": "defIgnore", "v": 0.3 }] },
+        { "at": 12, "text": "Doppelschlag +30 %", "ops": [{ "op": "doubleHit", "v": 0.3 }] }
+      ]
+    },
+    "Gift": {
+      "per": [{ "op": "typeDmg", "type": "Gift", "v": 0.05 }, { "op": "poisonChance", "v": 0.05 }],
+      "tiers": [
+        { "at": 4, "text": "Gift stapelt doppelt so schnell", "ops": [{ "op": "poisonDmg", "v": 1 }] },
+        { "at": 8, "text": "Gift springt bei K.O. auf den nächsten Gegner", "ops": [{ "op": "poisonSpread", "v": 1 }] },
+        { "at": 12, "text": "Alle Gegner starten vergiftet", "ops": [{ "op": "startStatus", "status": "poison", "v": 1 }] }
+      ]
+    },
+    "Boden": {
+      "per": [{ "op": "typeDmg", "type": "Boden", "v": 0.05 }, { "op": "defPct", "v": 0.03 }],
+      "tiers": [
+        { "at": 4, "text": "Erdbeben: 30 % Schaden auf alle anderen Gegner", "ops": [{ "op": "chain", "v": 0.3 }] },
+        { "at": 8, "text": "Treffer senken Abwehr um 6 %", "ops": [{ "op": "defShred", "v": 0.06 }] },
+        { "at": 12, "text": "+40 % Abwehr", "ops": [{ "op": "defPct", "v": 0.4 }] }
+      ]
+    },
+    "Flug": {
+      "per": [{ "op": "typeDmg", "type": "Flug", "v": 0.05 }, { "op": "evasion", "v": 0.015 }],
+      "tiers": [
+        { "at": 4, "text": "+20 % Initiative", "ops": [{ "op": "spePct", "v": 0.2 }] },
+        { "at": 8, "text": "Rückenwind: erste Runde 1 Extra-Aktion", "ops": [{ "op": "extraTurn", "v": 1 }] },
+        { "at": 12, "text": "+12 % Ausweichen", "ops": [{ "op": "evasion", "v": 0.12 }] }
+      ]
+    },
+    "Psycho": {
+      "per": [{ "op": "typeDmg", "type": "Psycho", "v": 0.05 }, { "op": "spaPct", "v": 0.03 }],
+      "tiers": [
+        { "at": 4, "text": "Spezial kostet 1 Energie weniger", "ops": [{ "op": "specialCost", "v": -1 }] },
+        { "at": 8, "text": "20 % Verwirrung bei Treffern", "ops": [{ "op": "confuseChance", "v": 0.2 }] },
+        { "at": 12, "text": "Spezial +60 %", "ops": [{ "op": "specialPct", "v": 0.6 }] }
+      ]
+    },
+    "Käfer": {
+      "per": [{ "op": "typeDmg", "type": "Käfer", "v": 0.05 }, { "op": "defShred", "v": 0.012 }],
+      "tiers": [
+        { "at": 4, "text": "Schwarm: 15 % Doppelschlag", "ops": [{ "op": "doubleHit", "v": 0.15 }] },
+        { "at": 8, "text": "+30 % gegen Gegner mit Status", "ops": [{ "op": "vsStatus", "v": 0.3 }] },
+        { "at": 12, "text": "Doppelschlag +25 %", "ops": [{ "op": "doubleHit", "v": 0.25 }] }
+      ]
+    },
+    "Gestein": {
+      "per": [{ "op": "typeDmg", "type": "Gestein", "v": 0.05 }, { "op": "hazard", "v": 0.02 }],
+      "tiers": [
+        { "at": 4, "text": "+15 % Abwehr und Sp.-Abwehr", "ops": [{ "op": "defPct", "v": 0.15 }, { "op": "spdPct", "v": 0.15 }] },
+        { "at": 8, "text": "Tarnsteine ×2", "ops": [{ "op": "hazard", "v": 0.1 }] },
+        { "at": 12, "text": "Wirft 15 % des erlittenen Schadens zurück", "ops": [{ "op": "thorns", "v": 0.15 }] }
+      ]
+    },
+    "Geist": {
+      "per": [{ "op": "typeDmg", "type": "Geist", "v": 0.05 }, { "op": "defIgnore", "v": 0.025 }],
+      "tiers": [
+        { "at": 4, "text": "K.O. heilt 15 % KP", "ops": [{ "op": "killHeal", "v": 0.15 }] },
+        { "at": 8, "text": "Fluch: 12 % Chance, dass Gegner ihren Zug verlieren", "ops": [{ "op": "flinch", "v": 0.12 }] },
+        { "at": 12, "text": "Ignoriert 40 % Abwehr", "ops": [{ "op": "defIgnore", "v": 0.4 }] }
+      ]
+    },
+    "Drache": {
+      "per": [{ "op": "typeDmg", "type": "Drache", "v": 0.05 }, { "op": "dmgPct", "v": 0.015 }],
+      "tiers": [
+        { "at": 4, "text": "Drachenwut: +30 % Schaden unter 50 % KP", "ops": [{ "op": "lowHp", "v": 0.3 }] },
+        { "at": 8, "text": "Alle Werte +12 %", "ops": [{ "op": "allPct", "v": 0.12 }] },
+        { "at": 12, "text": "Drachenwut +50 %", "ops": [{ "op": "lowHp", "v": 0.5 }] }
+      ]
+    },
+    "Unlicht": {
+      "per": [{ "op": "typeDmg", "type": "Unlicht", "v": 0.05 }, { "op": "crit", "v": 0.025 }],
+      "tiers": [
+        { "at": 4, "text": "Volltreffer ×2 statt ×1,5", "ops": [{ "op": "critDmg", "v": 0.5 }] },
+        { "at": 8, "text": "+25 % Gold", "ops": [{ "op": "gold", "v": 0.25 }] },
+        { "at": 12, "text": "Volltreffer +15 %", "ops": [{ "op": "crit", "v": 0.15 }] }
+      ]
+    },
+    "Stahl": {
+      "per": [{ "op": "typeDmg", "type": "Stahl", "v": 0.05 }, { "op": "dmgTaken", "v": -0.015 }],
+      "tiers": [
+        { "at": 4, "text": "Schild: 12 % KP zu Kampfbeginn", "ops": [{ "op": "shield", "v": 0.12 }] },
+        { "at": 8, "text": "Statusimmun", "ops": [{ "op": "statusImmune", "v": 1 }] },
+        { "at": 12, "text": "Schild +25 %", "ops": [{ "op": "shield", "v": 0.25 }] }
+      ]
+    },
+    "Fee": {
+      "per": [{ "op": "typeDmg", "type": "Fee", "v": 0.05 }, { "op": "spdPct", "v": 0.03 }],
+      "tiers": [
+        { "at": 4, "text": "Heilung +40 %", "ops": [{ "op": "healPct", "v": 0.4 }] },
+        { "at": 8, "text": "Schutzschleier: Statusimmun", "ops": [{ "op": "statusImmune", "v": 1 }] },
+        { "at": 12, "text": "Charme: Gegner -25 % Angriff", "ops": [{ "op": "enemyAtk", "v": -0.25 }] }
+      ]
+    },
+    "Normal": {
+      "per": [{ "op": "typeDmg", "type": "Normal", "v": 0.05 }, { "op": "allPct", "v": 0.012 }],
+      "tiers": [
+        { "at": 4, "text": "+15 % Gold", "ops": [{ "op": "gold", "v": 0.15 }] },
+        { "at": 8, "text": "+25 % Fangchance", "ops": [{ "op": "catch", "v": 0.25 }] },
+        { "at": 12, "text": "Alle Werte +20 %", "ops": [{ "op": "allPct", "v": 0.2 }] }
+      ]
+    }
+  },
+  "synergies": [
+    { "id": "waldbrand", "name": "Waldbrand", "types": ["Feuer", "Pflanze"], "min": 4, "text": "Verbrennung springt über und macht +100 % Schaden", "ops": [{ "op": "burnDmg", "v": 1 }, { "op": "burnSpread", "v": 1 }], "burst": { "type": "Feuer", "power": 1.4, "status": "burn" } },
+    { "id": "gewitter", "name": "Gewitterflut", "types": ["Elektro", "Wasser"], "min": 4, "text": "Elektro +50 %, Paralyse-Chance ×2", "ops": [{ "op": "typeDmg", "type": "Elektro", "v": 0.5 }, { "op": "paraMult", "v": 1 }], "burst": { "type": "Elektro", "power": 1.8, "status": "para", "all": true } },
+    { "id": "dampf", "name": "Dampfkessel", "types": ["Feuer", "Wasser"], "min": 4, "text": "Treffer verbrühen: +20 % Schaden, 10 % Verbrennung", "ops": [{ "op": "dmgPct", "v": 0.2 }, { "op": "burnChance", "v": 0.1 }], "burst": { "type": "Wasser", "power": 1.6, "status": "burn", "all": true } },
+    { "id": "sumpf", "name": "Giftsumpf", "types": ["Gift", "Boden"], "min": 4, "text": "Vergiftete Gegner verlieren Abwehr", "ops": [{ "op": "poisonArmor", "v": 0.3 }], "burst": { "type": "Gift", "power": 1.2, "status": "poison", "all": true } },
+    { "id": "schneesturm", "name": "Schneesturm", "types": ["Eis", "Flug"], "min": 4, "text": "Hagel 3 %, Einfrieren +8 %", "ops": [{ "op": "storm", "v": 0.03 }, { "op": "freezeChance", "v": 0.08 }], "burst": { "type": "Eis", "power": 1.4, "status": "freeze", "all": true } },
+    { "id": "albtraum", "name": "Albtraum", "types": ["Geist", "Psycho"], "min": 4, "text": "Schlafende Gegner verlieren 8 % KP pro Runde", "ops": [{ "op": "nightmare", "v": 0.08 }, { "op": "sleepChance", "v": 0.08 }], "burst": { "type": "Geist", "power": 1.6, "status": "sleep" } },
+    { "id": "schatten", "name": "Schattenklinge", "types": ["Unlicht", "Kampf"], "min": 4, "text": "Volltreffer +12 %, Volltreffer durchschlagen Abwehr", "ops": [{ "op": "crit", "v": 0.12 }, { "op": "critPierce", "v": 1 }], "burst": { "type": "Unlicht", "power": 2.2 } },
+    { "id": "festung", "name": "Festung", "types": ["Stahl", "Gestein"], "min": 4, "text": "-15 % Schaden, Dornen 10 %", "ops": [{ "op": "dmgTaken", "v": -0.15 }, { "op": "thorns", "v": 0.1 }], "burst": { "type": "Gestein", "power": 1.5, "shield": 0.25 } },
+    { "id": "maerchen", "name": "Märchenwald", "types": ["Fee", "Pflanze"], "min": 4, "text": "Heilung +50 %, Regen 2 %", "ops": [{ "op": "healPct", "v": 0.5 }, { "op": "regen", "v": 0.02 }], "burst": { "type": "Fee", "power": 1.2, "heal": 0.25 } },
+    { "id": "drachenfeuer", "name": "Drachenfeuer", "types": ["Drache", "Feuer"], "min": 4, "text": "Feuer und Drache +35 %", "ops": [{ "op": "typeDmg", "type": "Feuer", "v": 0.35 }, { "op": "typeDmg", "type": "Drache", "v": 0.35 }], "burst": { "type": "Drache", "power": 2.0, "status": "burn" } },
+    { "id": "schwarm", "name": "Giftschwarm", "types": ["Käfer", "Gift"], "min": 4, "text": "Doppelschlag 15 %, Gift-Chance +10 %", "ops": [{ "op": "doubleHit", "v": 0.15 }, { "op": "poisonChance", "v": 0.1 }], "burst": { "type": "Käfer", "power": 1.3, "status": "poison", "all": true } },
+    { "id": "sturmflug", "name": "Donnervogel", "types": ["Elektro", "Flug"], "min": 4, "text": "+25 % Initiative, Kettenblitz 20 %", "ops": [{ "op": "spePct", "v": 0.25 }, { "op": "chain", "v": 0.2 }], "burst": { "type": "Elektro", "power": 1.6, "status": "para" } },
+    { "id": "erdkern", "name": "Erdkern", "types": ["Boden", "Gestein"], "min": 4, "text": "Abwehr +25 %, Tarnsteine 6 %", "ops": [{ "op": "defPct", "v": 0.25 }, { "op": "hazard", "v": 0.06 }], "burst": { "type": "Boden", "power": 1.8, "all": true } },
+    { "id": "eisenfaust", "name": "Eisenfaust", "types": ["Kampf", "Stahl"], "min": 4, "text": "Angriff +20 %, ignoriert 15 % Abwehr", "ops": [{ "op": "atkPct", "v": 0.2 }, { "op": "defIgnore", "v": 0.15 }], "burst": { "type": "Kampf", "power": 2.0 } }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "_hinweis": "Alle Zahlen des Spiels. Werte des Spielers = (trainer + zerlegt + Team-Anteil + Items) × (1 + Prozent). Team-Anteil = Basiswert × teamShare × Levelfaktor.",
+  "inventorySlots": 24,
+  "teamMax": 6,
+  "trainerSlots": 2,
+  "trainer": { "hp": 60, "atk": 8, "def": 4, "spa": 8, "spd": 4, "spe": 8 },
+  "teamShare": { "hp": 0.5, "atk": 0.12, "def": 0.1, "spa": 0.12, "spd": 0.1, "spe": 0.1 },
+  "leadShare": 1.5,
+  "level": { "start": 5, "perFloor": 2, "statPerLevel": 0.05, "max": 100 },
+  "startGold": 25,
+  "startItems": ["pokeball", "pokeball", "pokeball", "trank", "trank", "sinelbeere"],
+  "energy": { "start": 1, "perTurn": 1, "max": 5, "specialCost": 2 },
+  "combat": {
+    "attackMult": 1.0,
+    "specialMult": 1.7,
+    "defK": 40,
+    "stab": 1.25,
+    "critMult": 1.5,
+    "waitHeal": 0.08,
+    "waitEnergy": 1,
+    "useMonMult": 2.2,
+    "useMonCooldownFloor": true,
+    "evasionCap": 0.5,
+    "speedEvasion": 0.12,
+    "burnTick": 0.06,
+    "poisonTick": 0.04,
+    "paraSkip": 0.25,
+    "sleepTurns": [1, 3],
+    "freezeTurns": [1, 2],
+    "confuseSelfHit": 0.33,
+    "statusDmgMult": 1.0
+  },
+  "sacrifice": { "floorAllPct": 0.35, "stackMult": 3, "affinity": 2, "healPct": 0.5 },
+  "floor": {
+    "fights": [1, 3],
+    "twoEnemiesFrom": 5,
+    "twoEnemiesChance": 0.35,
+    "threeEnemiesFrom": 15,
+    "threeEnemiesChance": 0.2,
+    "bossEvery": 10,
+    "eliteChance": 0.12,
+    "healAfterFloor": 1.0,
+    "healAfterFight": 0.15
+  },
+  "enemy": {
+    "hpBase": 22, "hp": 0.55,
+    "atkBase": 3, "atk": 0.11,
+    "defBase": 1, "def": 0.09,
+    "spaBase": 3, "spa": 0.11,
+    "spdBase": 1, "spd": 0.09,
+    "spe": 1,
+    "growLin": 0.15,
+    "growQuad": 0,
+    "growExp": 1.075,
+    "eliteMult": 1.6,
+    "early": [0.7, 0.85, 0.95],
+    "boss": { "hp": 3.5, "atk": 1.35, "def": 1.3 },
+    "stageByFloor": [[1, 1], [6, 2], [16, 3]],
+    "legendaryBossFrom": 20,
+    "angerAtk": 0.25
+  },
+  "rarityByFloor": {
+    "_hinweis": "Gewichte für Item-Seltenheit 1–5, linear interpoliert zwischen den Floors",
+    "points": [[1, [70, 25, 5, 0, 0]], [10, [40, 35, 20, 5, 0]], [25, [20, 30, 30, 17, 3]], [50, [10, 20, 35, 27, 8]]]
+  },
+  "rarities": [
+    { "name": "Gewöhnlich", "color": "#a8a8b8" },
+    { "name": "Ungewöhnlich", "color": "#6cd06a" },
+    { "name": "Selten", "color": "#58a8f8" },
+    { "name": "Episch", "color": "#c070f0" },
+    { "name": "Legendär", "color": "#f8a838" }
+  ],
+  "itemLevel": { "everyFloors": 2, "scale": 0.22, "jitter": 1 },
+  "loot": { "dropsPerFight": [1, 2], "eliteDrops": 3, "bossDrops": 4, "ballChance": 0.35, "minRarityBoss": 3 },
+  "gold": { "perFight": [6, 11], "floorMult": 0.1, "bossMult": 4 },
+  "shop": {
+    "slots": 6,
+    "reroll": 5,
+    "rerollStep": 3,
+    "priceByRarity": [12, 22, 40, 70, 120],
+    "priceFloorMult": 0.05,
+    "sellPct": 0.4,
+    "fixed": [{ "id": "pokeball", "price": 8 }, { "id": "superball", "price": 18 }, { "id": "trank", "price": 10 }, { "id": "hyperball", "price": 35, "minFloor": 8 }]
+  },
+  "salvage": { "byRarity": [1, 1.6, 2.5, 4, 6], "levelScale": 0.15 },
+  "keystoneEvery": 5,
+  "catch": {
+    "status": { "sleep": 2.5, "freeze": 2.5, "para": 1.5, "poison": 1.5, "burn": 1.5, "confuse": 1.2 },
+    "bossMult": 0.5,
+    "nestMax": 4,
+    "timerPerTurn": 0.3,
+    "timerMax": 4,
+    "quickTurn1": 5
+  },
+  "starter": {
+    "types": ["Feuer", "Wasser", "Pflanze", "Elektro", "Psycho", "Kampf", "Geist", "Drache", "Normal", "Gift", "Eis", "Boden", "Flug", "Käfer", "Gestein", "Unlicht", "Stahl", "Fee"],
+    "rarities": ["gewoehnlich", "selten"],
+    "biasOffType": 0.1,
+    "rerolls": 1
+  },
+  "spawn": {
+    "rarityWeights": { "gewoehnlich": 10, "selten": 4, "sehr_selten": 1.2, "legendaer": 0 },
+    "rareGrowth": 0.04
+  }
+}

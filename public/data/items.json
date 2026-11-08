@@ -1,0 +1,3232 @@
+{
+ "_hinweis": "Items. rarity 1–5. kind: held/gem/stone/berry/potion/ball/tm/candy/fragment/treasure. stacks = Typ-Stacks solange angelegt. equip = Ops solange angelegt (hp/atk/def/spa/spd/spe skalieren mit Item-Stufe). use = Verbrauchen im Kampf (heal = Anteil max. KP, buffs = Ops für den Kampf, floorStacks = Typ-Stacks für den Floor, burst = Typ-Entladung Stärke, attack = Attacke). trigger = löst angelegt automatisch aus (lowHp/status). salvage = permanente Punkte beim Zerlegen (all = alle Werte, aff = Affinität für die Typen des Items, gold = Gold-Bonus). weight = Drop-Häufigkeit, minFloor = frühester Floor.",
+ "items": [
+  {
+   "id": "silk-scarf",
+   "name": "Seidenschal",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "silk-scarf",
+   "weight": 5,
+   "stacks": {
+    "Normal": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Normal",
+     "v": 0.2
+    },
+    {
+     "op": "hp",
+     "v": 12
+    }
+   ],
+   "salvage": {
+    "hp": 2
+   }
+  },
+  {
+   "id": "charcoal",
+   "name": "Holzkohle",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "charcoal",
+   "weight": 5,
+   "stacks": {
+    "Feuer": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Feuer",
+     "v": 0.2
+    },
+    {
+     "op": "spa",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "spa": 2
+   }
+  },
+  {
+   "id": "mystic-water",
+   "name": "Zauberwasser",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "mystic-water",
+   "weight": 5,
+   "stacks": {
+    "Wasser": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Wasser",
+     "v": 0.2
+    },
+    {
+     "op": "spd",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "spd": 2
+   }
+  },
+  {
+   "id": "magnet",
+   "name": "Magnet",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "magnet",
+   "weight": 5,
+   "stacks": {
+    "Elektro": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Elektro",
+     "v": 0.2
+    },
+    {
+     "op": "spe",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "spe": 2
+   }
+  },
+  {
+   "id": "miracle-seed",
+   "name": "Wundersaat",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "miracle-seed",
+   "weight": 5,
+   "stacks": {
+    "Pflanze": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Pflanze",
+     "v": 0.2
+    },
+    {
+     "op": "hp",
+     "v": 12
+    }
+   ],
+   "salvage": {
+    "hp": 2
+   }
+  },
+  {
+   "id": "never-melt-ice",
+   "name": "Ewiges Eis",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "never-melt-ice",
+   "weight": 5,
+   "stacks": {
+    "Eis": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Eis",
+     "v": 0.2
+    },
+    {
+     "op": "spa",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "spa": 2
+   }
+  },
+  {
+   "id": "black-belt",
+   "name": "Schwarzgurt",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "black-belt",
+   "weight": 5,
+   "stacks": {
+    "Kampf": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Kampf",
+     "v": 0.2
+    },
+    {
+     "op": "atk",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "atk": 2
+   }
+  },
+  {
+   "id": "poison-barb",
+   "name": "Giftstich",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "poison-barb",
+   "weight": 5,
+   "stacks": {
+    "Gift": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Gift",
+     "v": 0.2
+    },
+    {
+     "op": "atk",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "atk": 2
+   }
+  },
+  {
+   "id": "soft-sand",
+   "name": "Pudersand",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "soft-sand",
+   "weight": 5,
+   "stacks": {
+    "Boden": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Boden",
+     "v": 0.2
+    },
+    {
+     "op": "def",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "def": 2
+   }
+  },
+  {
+   "id": "sharp-beak",
+   "name": "Hackattack",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "sharp-beak",
+   "weight": 5,
+   "stacks": {
+    "Flug": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Flug",
+     "v": 0.2
+    },
+    {
+     "op": "spe",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "spe": 2
+   }
+  },
+  {
+   "id": "twisted-spoon",
+   "name": "Krümmlöffel",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "twisted-spoon",
+   "weight": 5,
+   "stacks": {
+    "Psycho": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Psycho",
+     "v": 0.2
+    },
+    {
+     "op": "spa",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "spa": 2
+   }
+  },
+  {
+   "id": "silver-powder",
+   "name": "Silberstaub",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "silver-powder",
+   "weight": 5,
+   "stacks": {
+    "Käfer": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Käfer",
+     "v": 0.2
+    },
+    {
+     "op": "atk",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "atk": 2
+   }
+  },
+  {
+   "id": "hard-stone",
+   "name": "Granitstein",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "hard-stone",
+   "weight": 5,
+   "stacks": {
+    "Gestein": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Gestein",
+     "v": 0.2
+    },
+    {
+     "op": "def",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "def": 2
+   }
+  },
+  {
+   "id": "spell-tag",
+   "name": "Bannsticker",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "spell-tag",
+   "weight": 5,
+   "stacks": {
+    "Geist": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Geist",
+     "v": 0.2
+    },
+    {
+     "op": "spa",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "spa": 2
+   }
+  },
+  {
+   "id": "dragon-fang",
+   "name": "Drachenzahn",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "dragon-fang",
+   "weight": 5,
+   "stacks": {
+    "Drache": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Drache",
+     "v": 0.2
+    },
+    {
+     "op": "atk",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "atk": 2
+   }
+  },
+  {
+   "id": "black-glasses",
+   "name": "Schattenglas",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "black-glasses",
+   "weight": 5,
+   "stacks": {
+    "Unlicht": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Unlicht",
+     "v": 0.2
+    },
+    {
+     "op": "atk",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "atk": 2
+   }
+  },
+  {
+   "id": "metal-coat",
+   "name": "Metallmantel",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "metal-coat",
+   "weight": 5,
+   "stacks": {
+    "Stahl": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Stahl",
+     "v": 0.2
+    },
+    {
+     "op": "def",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "def": 2
+   }
+  },
+  {
+   "id": "fairy-feather",
+   "name": "Feenfeder",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "fairy-feather",
+   "weight": 5,
+   "stacks": {
+    "Fee": 2
+   },
+   "equip": [
+    {
+     "op": "typeDmg",
+     "type": "Fee",
+     "v": 0.2
+    },
+    {
+     "op": "spd",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "spd": 2
+   }
+  },
+  {
+   "id": "tafel-normal",
+   "name": "Normal-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-normal",
+   "weight": 6,
+   "stacks": {
+    "Normal": 1
+   },
+   "equip": [
+    {
+     "op": "hp",
+     "v": 8
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Normal-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "hp": 1
+   }
+  },
+  {
+   "id": "tafel-feuer",
+   "name": "Feuer-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-feuer",
+   "weight": 6,
+   "stacks": {
+    "Feuer": 1
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Feuer-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "spa": 1
+   }
+  },
+  {
+   "id": "tafel-wasser",
+   "name": "Wasser-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-wasser",
+   "weight": 6,
+   "stacks": {
+    "Wasser": 1
+   },
+   "equip": [
+    {
+     "op": "spd",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Wasser-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "spd": 1
+   }
+  },
+  {
+   "id": "tafel-elektro",
+   "name": "Elektro-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-elektro",
+   "weight": 6,
+   "stacks": {
+    "Elektro": 1
+   },
+   "equip": [
+    {
+     "op": "spe",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Elektro-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "spe": 1
+   }
+  },
+  {
+   "id": "tafel-pflanze",
+   "name": "Pflanze-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-pflanze",
+   "weight": 6,
+   "stacks": {
+    "Pflanze": 1
+   },
+   "equip": [
+    {
+     "op": "hp",
+     "v": 8
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Pflanze-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "hp": 1
+   }
+  },
+  {
+   "id": "tafel-eis",
+   "name": "Eis-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-eis",
+   "weight": 6,
+   "stacks": {
+    "Eis": 1
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Eis-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "spa": 1
+   }
+  },
+  {
+   "id": "tafel-kampf",
+   "name": "Kampf-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-kampf",
+   "weight": 6,
+   "stacks": {
+    "Kampf": 1
+   },
+   "equip": [
+    {
+     "op": "atk",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Kampf-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "atk": 1
+   }
+  },
+  {
+   "id": "tafel-gift",
+   "name": "Gift-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-gift",
+   "weight": 6,
+   "stacks": {
+    "Gift": 1
+   },
+   "equip": [
+    {
+     "op": "atk",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Gift-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "atk": 1
+   }
+  },
+  {
+   "id": "tafel-boden",
+   "name": "Boden-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-boden",
+   "weight": 6,
+   "stacks": {
+    "Boden": 1
+   },
+   "equip": [
+    {
+     "op": "def",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Boden-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "def": 1
+   }
+  },
+  {
+   "id": "tafel-flug",
+   "name": "Flug-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-flug",
+   "weight": 6,
+   "stacks": {
+    "Flug": 1
+   },
+   "equip": [
+    {
+     "op": "spe",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Flug-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "spe": 1
+   }
+  },
+  {
+   "id": "tafel-psycho",
+   "name": "Psycho-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-psycho",
+   "weight": 6,
+   "stacks": {
+    "Psycho": 1
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Psycho-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "spa": 1
+   }
+  },
+  {
+   "id": "tafel-kaefer",
+   "name": "Käfer-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-kaefer",
+   "weight": 6,
+   "stacks": {
+    "Käfer": 1
+   },
+   "equip": [
+    {
+     "op": "atk",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Käfer-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "atk": 1
+   }
+  },
+  {
+   "id": "tafel-gestein",
+   "name": "Gestein-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-gestein",
+   "weight": 6,
+   "stacks": {
+    "Gestein": 1
+   },
+   "equip": [
+    {
+     "op": "def",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Gestein-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "def": 1
+   }
+  },
+  {
+   "id": "tafel-geist",
+   "name": "Geist-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-geist",
+   "weight": 6,
+   "stacks": {
+    "Geist": 1
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Geist-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "spa": 1
+   }
+  },
+  {
+   "id": "tafel-drache",
+   "name": "Drache-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-drache",
+   "weight": 6,
+   "stacks": {
+    "Drache": 1
+   },
+   "equip": [
+    {
+     "op": "atk",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Drache-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "atk": 1
+   }
+  },
+  {
+   "id": "tafel-unlicht",
+   "name": "Unlicht-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-unlicht",
+   "weight": 6,
+   "stacks": {
+    "Unlicht": 1
+   },
+   "equip": [
+    {
+     "op": "atk",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Unlicht-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "atk": 1
+   }
+  },
+  {
+   "id": "tafel-stahl",
+   "name": "Stahl-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-stahl",
+   "weight": 6,
+   "stacks": {
+    "Stahl": 1
+   },
+   "equip": [
+    {
+     "op": "def",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Stahl-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "def": 1
+   }
+  },
+  {
+   "id": "tafel-fee",
+   "name": "Fee-Tafel",
+   "kind": "gem",
+   "rarity": 1,
+   "icon": "tafel-fee",
+   "weight": 6,
+   "stacks": {
+    "Fee": 1
+   },
+   "equip": [
+    {
+     "op": "spd",
+     "v": 2
+    }
+   ],
+   "use": {
+    "floorStacks": 4,
+    "burst": 1.2,
+    "text": "+4 Fee-Stacks für diesen Floor und Typ-Entladung"
+   },
+   "salvage": {
+    "spd": 1
+   }
+  },
+  {
+   "id": "fire-stone",
+   "name": "Feuerstein",
+   "kind": "stone",
+   "rarity": 3,
+   "icon": "fire-stone",
+   "weight": 2.5,
+   "minFloor": 3,
+   "stone": "fire-stone",
+   "stacks": {
+    "Feuer": 3
+   },
+   "equip": [
+    {
+     "op": "allPct",
+     "v": 0.05
+    }
+   ],
+   "use": {
+    "burst": 2.2,
+    "text": "Starke Typ-Entladung"
+   },
+   "salvage": {
+    "aff": 2
+   }
+  },
+  {
+   "id": "water-stone",
+   "name": "Wasserstein",
+   "kind": "stone",
+   "rarity": 3,
+   "icon": "water-stone",
+   "weight": 2.5,
+   "minFloor": 3,
+   "stone": "water-stone",
+   "stacks": {
+    "Wasser": 3
+   },
+   "equip": [
+    {
+     "op": "allPct",
+     "v": 0.05
+    }
+   ],
+   "use": {
+    "burst": 2.2,
+    "text": "Starke Typ-Entladung"
+   },
+   "salvage": {
+    "aff": 2
+   }
+  },
+  {
+   "id": "thunder-stone",
+   "name": "Donnerstein",
+   "kind": "stone",
+   "rarity": 3,
+   "icon": "thunder-stone",
+   "weight": 2.5,
+   "minFloor": 3,
+   "stone": "thunder-stone",
+   "stacks": {
+    "Elektro": 3
+   },
+   "equip": [
+    {
+     "op": "allPct",
+     "v": 0.05
+    }
+   ],
+   "use": {
+    "burst": 2.2,
+    "text": "Starke Typ-Entladung"
+   },
+   "salvage": {
+    "aff": 2
+   }
+  },
+  {
+   "id": "leaf-stone",
+   "name": "Blattstein",
+   "kind": "stone",
+   "rarity": 3,
+   "icon": "leaf-stone",
+   "weight": 2.5,
+   "minFloor": 3,
+   "stone": "leaf-stone",
+   "stacks": {
+    "Pflanze": 3
+   },
+   "equip": [
+    {
+     "op": "allPct",
+     "v": 0.05
+    }
+   ],
+   "use": {
+    "burst": 2.2,
+    "text": "Starke Typ-Entladung"
+   },
+   "salvage": {
+    "aff": 2
+   }
+  },
+  {
+   "id": "ice-stone",
+   "name": "Eisstein",
+   "kind": "stone",
+   "rarity": 3,
+   "icon": "ice-stone",
+   "weight": 2.5,
+   "minFloor": 3,
+   "stone": "ice-stone",
+   "stacks": {
+    "Eis": 3
+   },
+   "equip": [
+    {
+     "op": "allPct",
+     "v": 0.05
+    }
+   ],
+   "use": {
+    "burst": 2.2,
+    "text": "Starke Typ-Entladung"
+   },
+   "salvage": {
+    "aff": 2
+   }
+  },
+  {
+   "id": "moon-stone",
+   "name": "Mondstein",
+   "kind": "stone",
+   "rarity": 3,
+   "icon": "moon-stone",
+   "weight": 2.5,
+   "minFloor": 3,
+   "stone": "moon-stone",
+   "stacks": {
+    "Fee": 2,
+    "Psycho": 1
+   },
+   "equip": [
+    {
+     "op": "allPct",
+     "v": 0.05
+    }
+   ],
+   "use": {
+    "burst": 2.2,
+    "text": "Starke Typ-Entladung"
+   },
+   "salvage": {
+    "aff": 2
+   }
+  },
+  {
+   "id": "sun-stone",
+   "name": "Sonnenstein",
+   "kind": "stone",
+   "rarity": 3,
+   "icon": "sun-stone",
+   "weight": 2.5,
+   "minFloor": 3,
+   "stone": "sun-stone",
+   "stacks": {
+    "Feuer": 2,
+    "Pflanze": 1
+   },
+   "equip": [
+    {
+     "op": "allPct",
+     "v": 0.05
+    }
+   ],
+   "use": {
+    "burst": 2.2,
+    "text": "Starke Typ-Entladung"
+   },
+   "salvage": {
+    "aff": 2
+   }
+  },
+  {
+   "id": "dusk-stone",
+   "name": "Finsterstein",
+   "kind": "stone",
+   "rarity": 3,
+   "icon": "dusk-stone",
+   "weight": 2.5,
+   "minFloor": 3,
+   "stone": "dusk-stone",
+   "stacks": {
+    "Unlicht": 2,
+    "Geist": 1
+   },
+   "equip": [
+    {
+     "op": "allPct",
+     "v": 0.05
+    }
+   ],
+   "use": {
+    "burst": 2.2,
+    "text": "Starke Typ-Entladung"
+   },
+   "salvage": {
+    "aff": 2
+   }
+  },
+  {
+   "id": "dawn-stone",
+   "name": "Funkelstein",
+   "kind": "stone",
+   "rarity": 3,
+   "icon": "dawn-stone",
+   "weight": 2.5,
+   "minFloor": 3,
+   "stone": "dawn-stone",
+   "stacks": {
+    "Psycho": 2,
+    "Fee": 1
+   },
+   "equip": [
+    {
+     "op": "allPct",
+     "v": 0.05
+    }
+   ],
+   "use": {
+    "burst": 2.2,
+    "text": "Starke Typ-Entladung"
+   },
+   "salvage": {
+    "aff": 2
+   }
+  },
+  {
+   "id": "shiny-stone",
+   "name": "Leuchtstein",
+   "kind": "stone",
+   "rarity": 3,
+   "icon": "shiny-stone",
+   "weight": 2.5,
+   "minFloor": 3,
+   "stone": "shiny-stone",
+   "stacks": {
+    "Fee": 2,
+    "Normal": 1
+   },
+   "equip": [
+    {
+     "op": "allPct",
+     "v": 0.05
+    }
+   ],
+   "use": {
+    "burst": 2.2,
+    "text": "Starke Typ-Entladung"
+   },
+   "salvage": {
+    "aff": 2
+   }
+  },
+  {
+   "id": "leftovers",
+   "name": "Überreste",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "leftovers",
+   "weight": 3,
+   "equip": [
+    {
+     "op": "regen",
+     "v": 0.0625
+    },
+    {
+     "op": "hp",
+     "v": 8
+    }
+   ],
+   "salvage": {
+    "hp": 6
+   }
+  },
+  {
+   "id": "choice-band",
+   "name": "Wahlband",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "choice-band",
+   "weight": 2.5,
+   "equip": [
+    {
+     "op": "atkPct",
+     "v": 0.5
+    },
+    {
+     "op": "specialCost",
+     "v": 1
+    }
+   ],
+   "salvage": {
+    "atk": 5
+   }
+  },
+  {
+   "id": "choice-specs",
+   "name": "Wahlglas",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "choice-specs",
+   "weight": 2.5,
+   "equip": [
+    {
+     "op": "spaPct",
+     "v": 0.5
+    },
+    {
+     "op": "atkPct",
+     "v": -0.2
+    }
+   ],
+   "salvage": {
+    "spa": 5
+   }
+  },
+  {
+   "id": "choice-scarf",
+   "name": "Wahlschal",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "choice-scarf",
+   "weight": 2.5,
+   "equip": [
+    {
+     "op": "spePct",
+     "v": 0.5
+    },
+    {
+     "op": "extraTurn",
+     "v": 1
+    }
+   ],
+   "salvage": {
+    "spe": 5
+   }
+  },
+  {
+   "id": "life-orb",
+   "name": "Leben-Orb",
+   "kind": "held",
+   "rarity": 4,
+   "icon": "life-orb",
+   "weight": 1.5,
+   "minFloor": 4,
+   "equip": [
+    {
+     "op": "dmgPct",
+     "v": 0.3
+    },
+    {
+     "op": "recoil",
+     "v": 0.1
+    }
+   ],
+   "salvage": {
+    "atk": 4,
+    "spa": 4
+   }
+  },
+  {
+   "id": "focus-sash",
+   "name": "Fokusgurt",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "focus-sash",
+   "weight": 2,
+   "equip": [
+    {
+     "op": "sash",
+     "v": 1
+    }
+   ],
+   "salvage": {
+    "def": 3,
+    "spd": 3
+   }
+  },
+  {
+   "id": "scope-lens",
+   "name": "Scope-Linse",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "scope-lens",
+   "weight": 3,
+   "equip": [
+    {
+     "op": "crit",
+     "v": 0.12
+    }
+   ],
+   "salvage": {
+    "atk": 2,
+    "spe": 2
+   }
+  },
+  {
+   "id": "quick-claw",
+   "name": "Flinkklaue",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "quick-claw",
+   "weight": 3,
+   "equip": [
+    {
+     "op": "spe",
+     "v": 5
+    },
+    {
+     "op": "quick",
+     "v": 0.15
+    }
+   ],
+   "salvage": {
+    "spe": 4
+   }
+  },
+  {
+   "id": "kings-rock",
+   "name": "King-Stein",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "kings-rock",
+   "weight": 2,
+   "equip": [
+    {
+     "op": "flinch",
+     "v": 0.1
+    },
+    {
+     "op": "atk",
+     "v": 2
+    }
+   ],
+   "salvage": {
+    "atk": 3
+   }
+  },
+  {
+   "id": "expert-belt",
+   "name": "Expertengurt",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "expert-belt",
+   "weight": 2,
+   "equip": [
+    {
+     "op": "superPct",
+     "v": 0.35
+    }
+   ],
+   "salvage": {
+    "atk": 2,
+    "spa": 2
+   }
+  },
+  {
+   "id": "lucky-egg",
+   "name": "Glücks-Ei",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "lucky-egg",
+   "weight": 2,
+   "equip": [
+    {
+     "op": "levelUp",
+     "v": 2
+    }
+   ],
+   "salvage": {
+    "hp": 4
+   },
+   "onlyMon": true
+  },
+  {
+   "id": "amulet-coin",
+   "name": "Münzamulett",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "amulet-coin",
+   "weight": 3,
+   "equip": [
+    {
+     "op": "gold",
+     "v": 0.5
+    }
+   ],
+   "salvage": {
+    "gold": 1
+   },
+   "sell": 30
+  },
+  {
+   "id": "shell-bell",
+   "name": "Seegesang",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "shell-bell",
+   "weight": 3,
+   "equip": [
+    {
+     "op": "lifesteal",
+     "v": 0.125
+    }
+   ],
+   "salvage": {
+    "hp": 4
+   }
+  },
+  {
+   "id": "rocky-helmet",
+   "name": "Beulenhelm",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "rocky-helmet",
+   "weight": 3,
+   "equip": [
+    {
+     "op": "thorns",
+     "v": 0.2
+    },
+    {
+     "op": "def",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "def": 4
+   }
+  },
+  {
+   "id": "everstone",
+   "name": "Ewigstein",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "everstone",
+   "weight": 2,
+   "equip": [
+    {
+     "op": "noEvolve",
+     "v": 1
+    },
+    {
+     "op": "holderShare",
+     "v": 0.6
+    }
+   ],
+   "salvage": {
+    "def": 2,
+    "spd": 2
+   },
+   "onlyMon": true,
+   "desc": "Verhindert Entwicklung, Träger gibt 60 % mehr Werte ans Team."
+  },
+  {
+   "id": "toxic-orb",
+   "name": "Toxik-Orb",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "toxic-orb",
+   "weight": 2,
+   "minFloor": 3,
+   "stacks": {
+    "Gift": 4
+   },
+   "equip": [
+    {
+     "op": "selfStatus",
+     "status": "poison",
+     "v": 1
+    },
+    {
+     "op": "atkPct",
+     "v": 0.25
+    }
+   ],
+   "salvage": {
+    "atk": 3,
+    "aff": 1
+   }
+  },
+  {
+   "id": "flame-orb",
+   "name": "Heiß-Orb",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "flame-orb",
+   "weight": 2,
+   "minFloor": 3,
+   "stacks": {
+    "Feuer": 4
+   },
+   "equip": [
+    {
+     "op": "selfStatus",
+     "status": "burn",
+     "v": 1
+    },
+    {
+     "op": "spaPct",
+     "v": 0.25
+    }
+   ],
+   "salvage": {
+    "spa": 3,
+    "aff": 1
+   }
+  },
+  {
+   "id": "tide-orb",
+   "name": "Gezeiten-Orb",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "tide-orb",
+   "weight": 2,
+   "minFloor": 3,
+   "stacks": {
+    "Wasser": 3
+   },
+   "equip": [
+    {
+     "op": "regen",
+     "v": 0.03
+    },
+    {
+     "op": "spdPct",
+     "v": 0.15
+    }
+   ],
+   "salvage": {
+    "spd": 3,
+    "aff": 1
+   }
+  },
+  {
+   "id": "prism-orb",
+   "name": "Prisma-Kugel",
+   "kind": "held",
+   "rarity": 4,
+   "icon": "prism-orb",
+   "weight": 1,
+   "minFloor": 6,
+   "equip": [
+    {
+     "op": "allStacks",
+     "v": 1
+    }
+   ],
+   "salvage": {
+    "aff": 3
+   },
+   "desc": "+1 Stack für jeden Typ, den du schon hast."
+  },
+  {
+   "id": "pale-pearl",
+   "name": "Blassperle",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "pale-pearl",
+   "weight": 3,
+   "equip": [
+    {
+     "op": "hp",
+     "v": 20
+    },
+    {
+     "op": "spd",
+     "v": 2
+    }
+   ],
+   "salvage": {
+    "hp": 6
+   }
+  },
+  {
+   "id": "iron-ball",
+   "name": "Eisenkugel",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "iron-ball",
+   "weight": 2.5,
+   "stacks": {
+    "Stahl": 3
+   },
+   "equip": [
+    {
+     "op": "def",
+     "v": 6
+    },
+    {
+     "op": "spePct",
+     "v": -0.3
+    }
+   ],
+   "salvage": {
+    "def": 5
+   }
+  },
+  {
+   "id": "heat-rock",
+   "name": "Heißbrocken",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "heat-rock",
+   "weight": 2.5,
+   "stacks": {
+    "Feuer": 2
+   },
+   "equip": [
+    {
+     "op": "burnChance",
+     "v": 0.1
+    }
+   ],
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   }
+  },
+  {
+   "id": "icy-rock",
+   "name": "Eisbrocken",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "icy-rock",
+   "weight": 2.5,
+   "stacks": {
+    "Eis": 2
+   },
+   "equip": [
+    {
+     "op": "freezeChance",
+     "v": 0.06
+    }
+   ],
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   }
+  },
+  {
+   "id": "damp-rock",
+   "name": "Nassbrocken",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "damp-rock",
+   "weight": 2.5,
+   "stacks": {
+    "Wasser": 2
+   },
+   "equip": [
+    {
+     "op": "healPct",
+     "v": 0.2
+    }
+   ],
+   "salvage": {
+    "spd": 2,
+    "aff": 1
+   }
+  },
+  {
+   "id": "smooth-rock",
+   "name": "Glattbrocken",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "smooth-rock",
+   "weight": 2.5,
+   "stacks": {
+    "Boden": 2
+   },
+   "equip": [
+    {
+     "op": "chain",
+     "v": 0.15
+    }
+   ],
+   "salvage": {
+    "def": 2,
+    "aff": 1
+   }
+  },
+  {
+   "id": "spike-core",
+   "name": "Stachelkern",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "spike-core",
+   "weight": 2.5,
+   "stacks": {
+    "Gestein": 2
+   },
+   "equip": [
+    {
+     "op": "hazard",
+     "v": 0.06
+    }
+   ],
+   "salvage": {
+    "def": 2,
+    "aff": 1
+   }
+  },
+  {
+   "id": "hard-core",
+   "name": "Harter Stein",
+   "kind": "held",
+   "rarity": 1,
+   "icon": "hard-core",
+   "weight": 4,
+   "equip": [
+    {
+     "op": "def",
+     "v": 3
+    },
+    {
+     "op": "spd",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "def": 2,
+    "spd": 1
+   }
+  },
+  {
+   "id": "oval-stone",
+   "name": "Ovaler Stein",
+   "kind": "held",
+   "rarity": 1,
+   "icon": "oval-stone",
+   "weight": 4,
+   "equip": [
+    {
+     "op": "hp",
+     "v": 16
+    }
+   ],
+   "salvage": {
+    "hp": 3
+   }
+  },
+  {
+   "id": "red-shard",
+   "name": "Kraftring",
+   "kind": "held",
+   "rarity": 1,
+   "icon": "red-shard",
+   "weight": 4,
+   "equip": [
+    {
+     "op": "atk",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "atk": 2
+   }
+  },
+  {
+   "id": "blue-shard",
+   "name": "Geistring",
+   "kind": "held",
+   "rarity": 1,
+   "icon": "blue-shard",
+   "weight": 4,
+   "equip": [
+    {
+     "op": "spa",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "spa": 2
+   }
+  },
+  {
+   "id": "green-shard",
+   "name": "Schutzring",
+   "kind": "held",
+   "rarity": 1,
+   "icon": "green-shard",
+   "weight": 4,
+   "equip": [
+    {
+     "op": "def",
+     "v": 2
+    },
+    {
+     "op": "spd",
+     "v": 2
+    }
+   ],
+   "salvage": {
+    "def": 1,
+    "spd": 1
+   }
+  },
+  {
+   "id": "yellow-shard",
+   "name": "Tempo-Ring",
+   "kind": "held",
+   "rarity": 1,
+   "icon": "yellow-shard",
+   "weight": 4,
+   "equip": [
+    {
+     "op": "spe",
+     "v": 3
+    }
+   ],
+   "salvage": {
+    "spe": 2
+   }
+  },
+  {
+   "id": "star-piece",
+   "name": "Sternenstück",
+   "kind": "treasure",
+   "rarity": 3,
+   "icon": "star-piece",
+   "weight": 2,
+   "salvage": {
+    "all": 2
+   },
+   "sell": 90,
+   "desc": "Wertvoll. Verkaufen bringt viel Gold."
+  },
+  {
+   "id": "comet-shard",
+   "name": "Kometstück",
+   "kind": "treasure",
+   "rarity": 4,
+   "icon": "comet-shard",
+   "weight": 0.8,
+   "minFloor": 5,
+   "salvage": {
+    "all": 5
+   },
+   "sell": 200,
+   "desc": "Sehr wertvoll."
+  },
+  {
+   "id": "shiny-shard",
+   "name": "Glanzsplitter",
+   "kind": "treasure",
+   "rarity": 2,
+   "icon": "shiny-shard",
+   "weight": 3,
+   "salvage": {
+    "aff": 2,
+    "all": 1
+   },
+   "sell": 35,
+   "desc": "Zum Zerlegen gedacht."
+  },
+  {
+   "id": "sinelbeere",
+   "name": "Sinelbeere",
+   "kind": "berry",
+   "rarity": 1,
+   "weight": 6,
+   "trigger": "lowHp",
+   "use": {
+    "heal": 0.25
+   },
+   "salvage": {
+    "hp": 2
+   },
+   "icon": "sinelbeere"
+  },
+  {
+   "id": "tsitrubeere",
+   "name": "Tsitrubeere",
+   "kind": "berry",
+   "rarity": 2,
+   "weight": 4,
+   "trigger": "lowHp",
+   "use": {
+    "heal": 0.5
+   },
+   "salvage": {
+    "hp": 3
+   },
+   "icon": "tsitrubeere"
+  },
+  {
+   "id": "prunusbeere",
+   "name": "Prunusbeere",
+   "kind": "berry",
+   "rarity": 1,
+   "weight": 4,
+   "trigger": "status",
+   "use": {
+    "cure": true,
+    "heal": 0.1
+   },
+   "salvage": {
+    "spd": 2
+   },
+   "icon": "prunusbeere"
+  },
+  {
+   "id": "lydzibeere",
+   "name": "Lydzibeere",
+   "kind": "berry",
+   "rarity": 2,
+   "weight": 3,
+   "trigger": "lowHp",
+   "use": {
+    "buffs": [
+     {
+      "op": "atkPct",
+      "v": 0.5
+     }
+    ],
+    "text": "Angriff +50 % für den Kampf"
+   },
+   "salvage": {
+    "atk": 2
+   },
+   "icon": "lydzibeere"
+  },
+  {
+   "id": "liechibeere",
+   "name": "Liechibeere",
+   "kind": "berry",
+   "rarity": 2,
+   "weight": 3,
+   "trigger": "lowHp",
+   "use": {
+    "buffs": [
+     {
+      "op": "spaPct",
+      "v": 0.5
+     }
+    ],
+    "text": "Sp.-Angriff +50 % für den Kampf"
+   },
+   "salvage": {
+    "spa": 2
+   },
+   "icon": "liechibeere"
+  },
+  {
+   "id": "trank",
+   "name": "Trank",
+   "kind": "potion",
+   "rarity": 1,
+   "weight": 6,
+   "stack": 5,
+   "use": {
+    "heal": 0.3
+   },
+   "salvage": {
+    "hp": 1
+   },
+   "icon": "trank"
+  },
+  {
+   "id": "supertrank",
+   "name": "Supertrank",
+   "kind": "potion",
+   "rarity": 2,
+   "weight": 4,
+   "stack": 5,
+   "use": {
+    "heal": 0.6
+   },
+   "salvage": {
+    "hp": 2
+   },
+   "icon": "supertrank"
+  },
+  {
+   "id": "hypertrank",
+   "name": "Hypertrank",
+   "kind": "potion",
+   "rarity": 3,
+   "weight": 2,
+   "stack": 5,
+   "minFloor": 5,
+   "use": {
+    "heal": 1
+   },
+   "salvage": {
+    "hp": 4
+   },
+   "icon": "hypertrank"
+  },
+  {
+   "id": "hyperheiler",
+   "name": "Hyperheiler",
+   "kind": "potion",
+   "rarity": 1,
+   "weight": 3,
+   "stack": 5,
+   "use": {
+    "cure": true,
+    "energy": 1
+   },
+   "salvage": {
+    "spd": 1
+   },
+   "icon": "hyperheiler"
+  },
+  {
+   "id": "x-angriff",
+   "name": "X-Angriff",
+   "kind": "potion",
+   "rarity": 1,
+   "weight": 4,
+   "stack": 5,
+   "use": {
+    "buffs": [
+     {
+      "op": "atkPct",
+      "v": 0.5
+     }
+    ]
+   },
+   "salvage": {
+    "atk": 1
+   },
+   "icon": "x-angriff"
+  },
+  {
+   "id": "x-spezial",
+   "name": "X-Spezial",
+   "kind": "potion",
+   "rarity": 1,
+   "weight": 4,
+   "stack": 5,
+   "use": {
+    "buffs": [
+     {
+      "op": "spaPct",
+      "v": 0.5
+     }
+    ]
+   },
+   "salvage": {
+    "spa": 1
+   },
+   "icon": "x-spezial"
+  },
+  {
+   "id": "x-abwehr",
+   "name": "X-Abwehr",
+   "kind": "potion",
+   "rarity": 1,
+   "weight": 4,
+   "stack": 5,
+   "use": {
+    "buffs": [
+     {
+      "op": "defPct",
+      "v": 0.6
+     },
+     {
+      "op": "spdPct",
+      "v": 0.6
+     }
+    ]
+   },
+   "salvage": {
+    "def": 1
+   },
+   "icon": "x-abwehr"
+  },
+  {
+   "id": "x-tempo",
+   "name": "X-Tempo",
+   "kind": "potion",
+   "rarity": 1,
+   "weight": 4,
+   "stack": 5,
+   "use": {
+    "buffs": [
+     {
+      "op": "spePct",
+      "v": 0.6
+     }
+    ],
+    "energy": 1
+   },
+   "salvage": {
+    "spe": 1
+   },
+   "icon": "x-tempo"
+  },
+  {
+   "id": "sonderbonbon",
+   "name": "Sonderbonbon",
+   "kind": "candy",
+   "rarity": 3,
+   "weight": 2,
+   "stack": 9,
+   "use": {
+    "levelUp": 3,
+    "text": "Ein Team-Pokémon +3 Level (Rast)"
+   },
+   "restOnly": true,
+   "salvage": {
+    "all": 1
+   },
+   "icon": "sonderbonbon"
+  },
+  {
+   "id": "master-fragment",
+   "name": "Meisterball-Fragment",
+   "kind": "fragment",
+   "rarity": 3,
+   "weight": 1,
+   "minFloor": 4,
+   "stack": 3,
+   "desc": "3 Fragmente ergeben automatisch einen Meisterball.",
+   "salvage": {
+    "aff": 1
+   },
+   "icon": "master-fragment"
+  },
+  {
+   "id": "pokeball",
+   "name": "Pokéball",
+   "kind": "ball",
+   "rarity": 1,
+   "weight": 8,
+   "stack": 10,
+   "catch": {
+    "mult": 1
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "icon": "pokeball"
+  },
+  {
+   "id": "superball",
+   "name": "Superball",
+   "kind": "ball",
+   "rarity": 2,
+   "weight": 5,
+   "stack": 10,
+   "catch": {
+    "mult": 1.5
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "icon": "superball"
+  },
+  {
+   "id": "hyperball",
+   "name": "Hyperball",
+   "kind": "ball",
+   "rarity": 3,
+   "weight": 3,
+   "stack": 10,
+   "minFloor": 6,
+   "catch": {
+    "mult": 2
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "icon": "hyperball"
+  },
+  {
+   "id": "meisterball",
+   "name": "Meisterball",
+   "kind": "ball",
+   "rarity": 5,
+   "weight": 0,
+   "stack": 10,
+   "catch": {
+    "mult": 255,
+    "sure": true
+   },
+   "salvage": {
+    "all": 4
+   },
+   "icon": "meisterball"
+  },
+  {
+   "id": "netzball",
+   "name": "Netzball",
+   "kind": "ball",
+   "rarity": 2,
+   "weight": 2,
+   "stack": 10,
+   "catch": {
+    "mult": 1,
+    "types": [
+     "Wasser",
+     "Käfer"
+    ],
+    "bonus": 3.5
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "icon": "netzball"
+  },
+  {
+   "id": "tauchball",
+   "name": "Tauchball",
+   "kind": "ball",
+   "rarity": 2,
+   "weight": 1.5,
+   "stack": 10,
+   "catch": {
+    "mult": 1,
+    "types": [
+     "Wasser",
+     "Eis"
+    ],
+    "bonus": 3
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "icon": "tauchball"
+  },
+  {
+   "id": "finsterball",
+   "name": "Finsterball",
+   "kind": "ball",
+   "rarity": 2,
+   "weight": 2,
+   "stack": 10,
+   "catch": {
+    "mult": 1,
+    "types": [
+     "Unlicht",
+     "Geist"
+    ],
+    "bonus": 3
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "icon": "finsterball"
+  },
+  {
+   "id": "mondball",
+   "name": "Mondball",
+   "kind": "ball",
+   "rarity": 2,
+   "weight": 1.5,
+   "stack": 10,
+   "catch": {
+    "mult": 1,
+    "types": [
+     "Fee",
+     "Psycho"
+    ],
+    "bonus": 3
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "icon": "mondball"
+  },
+  {
+   "id": "koederball",
+   "name": "Köderball",
+   "kind": "ball",
+   "rarity": 2,
+   "weight": 1.5,
+   "stack": 10,
+   "catch": {
+    "mult": 1,
+    "types": [
+     "Wasser",
+     "Drache"
+    ],
+    "bonus": 3
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "icon": "koederball"
+  },
+  {
+   "id": "turboball",
+   "name": "Turboball",
+   "kind": "ball",
+   "rarity": 2,
+   "weight": 1.5,
+   "stack": 10,
+   "catch": {
+    "mult": 1,
+    "fast": 100,
+    "bonus": 4
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "icon": "turboball"
+  },
+  {
+   "id": "schwerball",
+   "name": "Schwerball",
+   "kind": "ball",
+   "rarity": 2,
+   "weight": 1.5,
+   "stack": 10,
+   "catch": {
+    "mult": 1,
+    "types": [
+     "Gestein",
+     "Stahl",
+     "Boden"
+    ],
+    "bonus": 3
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "icon": "schwerball"
+  },
+  {
+   "id": "nestball",
+   "name": "Nestball",
+   "kind": "ball",
+   "rarity": 2,
+   "weight": 2,
+   "stack": 10,
+   "catch": {
+    "mult": 1,
+    "nest": true
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "desc": "Je schwächer (früher) das Pokémon, desto besser – stark auf frühen Floors.",
+   "icon": "nestball"
+  },
+  {
+   "id": "timerball",
+   "name": "Timerball",
+   "kind": "ball",
+   "rarity": 2,
+   "weight": 2,
+   "stack": 10,
+   "catch": {
+    "mult": 1,
+    "timer": true
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "desc": "Wird mit jeder Kampfrunde besser (bis ×4).",
+   "icon": "timerball"
+  },
+  {
+   "id": "flottball",
+   "name": "Flottball",
+   "kind": "ball",
+   "rarity": 3,
+   "weight": 1.2,
+   "stack": 10,
+   "catch": {
+    "mult": 1,
+    "quick": true
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "desc": "×5 in der ersten Runde, danach ×1.",
+   "icon": "flottball"
+  },
+  {
+   "id": "heilball",
+   "name": "Heilball",
+   "kind": "ball",
+   "rarity": 2,
+   "weight": 1.5,
+   "stack": 10,
+   "catch": {
+    "mult": 1,
+    "heal": 0.3
+   },
+   "salvage": {
+    "gold": 1
+   },
+   "desc": "Gefangenes Pokémon heilt dich um 30 %.",
+   "icon": "heilball"
+  },
+  {
+   "id": "luxusball",
+   "name": "Luxusball",
+   "kind": "ball",
+   "rarity": 3,
+   "weight": 1,
+   "stack": 10,
+   "catch": {
+    "mult": 1.5,
+    "gold": 40
+   },
+   "salvage": {
+    "gold": 3
+   },
+   "desc": "Fang bringt 40 Gold extra.",
+   "icon": "luxusball"
+  },
+  {
+   "id": "tm-normal",
+   "name": "TM 01 Hyperstrahl",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Normal": 1
+   },
+   "tm": {
+    "name": "Hyperstrahl",
+    "type": "Normal",
+    "power": 1.9
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Hyperstrahl",
+     "type": "Normal",
+     "power": 2.6599999999999997,
+     "all": false
+    },
+    "text": "Hyperstrahl einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Hyperstrahl.",
+   "icon": "tm-normal"
+  },
+  {
+   "id": "tm-feuer",
+   "name": "TM 02 Flammenwurf",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Feuer": 1
+   },
+   "tm": {
+    "name": "Flammenwurf",
+    "type": "Feuer",
+    "power": 1.6
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Flammenwurf",
+     "type": "Feuer",
+     "power": 2.2399999999999998,
+     "status": "burn",
+     "all": false
+    },
+    "text": "Flammenwurf einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Flammenwurf.",
+   "icon": "tm-feuer"
+  },
+  {
+   "id": "tm-wasser",
+   "name": "TM 03 Surfer",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Wasser": 1
+   },
+   "tm": {
+    "name": "Surfer",
+    "type": "Wasser",
+    "power": 1.6
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Surfer",
+     "type": "Wasser",
+     "power": 2.2399999999999998,
+     "all": false
+    },
+    "text": "Surfer einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Surfer.",
+   "icon": "tm-wasser"
+  },
+  {
+   "id": "tm-elektro",
+   "name": "TM 04 Donnerblitz",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Elektro": 1
+   },
+   "tm": {
+    "name": "Donnerblitz",
+    "type": "Elektro",
+    "power": 1.6
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Donnerblitz",
+     "type": "Elektro",
+     "power": 2.2399999999999998,
+     "status": "para",
+     "all": false
+    },
+    "text": "Donnerblitz einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Donnerblitz.",
+   "icon": "tm-elektro"
+  },
+  {
+   "id": "tm-pflanze",
+   "name": "TM 05 Energieball",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Pflanze": 1
+   },
+   "tm": {
+    "name": "Energieball",
+    "type": "Pflanze",
+    "power": 1.6
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Energieball",
+     "type": "Pflanze",
+     "power": 2.2399999999999998,
+     "all": false
+    },
+    "text": "Energieball einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Energieball.",
+   "icon": "tm-pflanze"
+  },
+  {
+   "id": "tm-eis",
+   "name": "TM 06 Eisstrahl",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Eis": 1
+   },
+   "tm": {
+    "name": "Eisstrahl",
+    "type": "Eis",
+    "power": 1.6
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Eisstrahl",
+     "type": "Eis",
+     "power": 2.2399999999999998,
+     "status": "freeze",
+     "all": false
+    },
+    "text": "Eisstrahl einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Eisstrahl.",
+   "icon": "tm-eis"
+  },
+  {
+   "id": "tm-kampf",
+   "name": "TM 07 Aurasphäre",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Kampf": 1
+   },
+   "tm": {
+    "name": "Aurasphäre",
+    "type": "Kampf",
+    "power": 1.6
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Aurasphäre",
+     "type": "Kampf",
+     "power": 2.2399999999999998,
+     "all": false
+    },
+    "text": "Aurasphäre einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Aurasphäre.",
+   "icon": "tm-kampf"
+  },
+  {
+   "id": "tm-gift",
+   "name": "TM 08 Matschbombe",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Gift": 1
+   },
+   "tm": {
+    "name": "Matschbombe",
+    "type": "Gift",
+    "power": 1.6
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Matschbombe",
+     "type": "Gift",
+     "power": 2.2399999999999998,
+     "status": "poison",
+     "all": false
+    },
+    "text": "Matschbombe einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Matschbombe.",
+   "icon": "tm-gift"
+  },
+  {
+   "id": "tm-boden",
+   "name": "TM 09 Erdbeben",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Boden": 1
+   },
+   "tm": {
+    "name": "Erdbeben",
+    "type": "Boden",
+    "power": 1.7
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Erdbeben",
+     "type": "Boden",
+     "power": 2.38,
+     "all": true
+    },
+    "text": "Erdbeben einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Erdbeben.",
+   "icon": "tm-boden"
+  },
+  {
+   "id": "tm-flug",
+   "name": "TM 10 Luftschnitt",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Flug": 1
+   },
+   "tm": {
+    "name": "Luftschnitt",
+    "type": "Flug",
+    "power": 1.5
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Luftschnitt",
+     "type": "Flug",
+     "power": 2.0999999999999996,
+     "all": false
+    },
+    "text": "Luftschnitt einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Luftschnitt.",
+   "icon": "tm-flug"
+  },
+  {
+   "id": "tm-psycho",
+   "name": "TM 11 Psychokinese",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Psycho": 1
+   },
+   "tm": {
+    "name": "Psychokinese",
+    "type": "Psycho",
+    "power": 1.6
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Psychokinese",
+     "type": "Psycho",
+     "power": 2.2399999999999998,
+     "status": "confuse",
+     "all": false
+    },
+    "text": "Psychokinese einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Psychokinese.",
+   "icon": "tm-psycho"
+  },
+  {
+   "id": "tm-kaefer",
+   "name": "TM 12 Käferbrumm",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Käfer": 1
+   },
+   "tm": {
+    "name": "Käferbrumm",
+    "type": "Käfer",
+    "power": 1.5
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Käferbrumm",
+     "type": "Käfer",
+     "power": 2.0999999999999996,
+     "all": true
+    },
+    "text": "Käferbrumm einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Käferbrumm.",
+   "icon": "tm-kaefer"
+  },
+  {
+   "id": "tm-gestein",
+   "name": "TM 13 Steinkante",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Gestein": 1
+   },
+   "tm": {
+    "name": "Steinkante",
+    "type": "Gestein",
+    "power": 1.7
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Steinkante",
+     "type": "Gestein",
+     "power": 2.38,
+     "all": false
+    },
+    "text": "Steinkante einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Steinkante.",
+   "icon": "tm-gestein"
+  },
+  {
+   "id": "tm-geist",
+   "name": "TM 14 Spukball",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Geist": 1
+   },
+   "tm": {
+    "name": "Spukball",
+    "type": "Geist",
+    "power": 1.6
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Spukball",
+     "type": "Geist",
+     "power": 2.2399999999999998,
+     "status": "sleep",
+     "all": false
+    },
+    "text": "Spukball einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Spukball.",
+   "icon": "tm-geist"
+  },
+  {
+   "id": "tm-drache",
+   "name": "TM 15 Drachenpuls",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Drache": 1
+   },
+   "tm": {
+    "name": "Drachenpuls",
+    "type": "Drache",
+    "power": 1.7
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Drachenpuls",
+     "type": "Drache",
+     "power": 2.38,
+     "all": false
+    },
+    "text": "Drachenpuls einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Drachenpuls.",
+   "icon": "tm-drache"
+  },
+  {
+   "id": "tm-unlicht",
+   "name": "TM 16 Finsteraura",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Unlicht": 1
+   },
+   "tm": {
+    "name": "Finsteraura",
+    "type": "Unlicht",
+    "power": 1.6
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Finsteraura",
+     "type": "Unlicht",
+     "power": 2.2399999999999998,
+     "all": false
+    },
+    "text": "Finsteraura einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Finsteraura.",
+   "icon": "tm-unlicht"
+  },
+  {
+   "id": "tm-stahl",
+   "name": "TM 17 Lichtkanone",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Stahl": 1
+   },
+   "tm": {
+    "name": "Lichtkanone",
+    "type": "Stahl",
+    "power": 1.6
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Lichtkanone",
+     "type": "Stahl",
+     "power": 2.2399999999999998,
+     "all": false
+    },
+    "text": "Lichtkanone einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Lichtkanone.",
+   "icon": "tm-stahl"
+  },
+  {
+   "id": "tm-fee",
+   "name": "TM 18 Mondgewalt",
+   "kind": "tm",
+   "rarity": 2,
+   "weight": 2.5,
+   "minFloor": 2,
+   "stacks": {
+    "Fee": 1
+   },
+   "tm": {
+    "name": "Mondgewalt",
+    "type": "Fee",
+    "power": 1.6
+   },
+   "equip": [
+    {
+     "op": "spa",
+     "v": 2
+    }
+   ],
+   "use": {
+    "attack": {
+     "name": "Mondgewalt",
+     "type": "Fee",
+     "power": 2.2399999999999998,
+     "all": false
+    },
+    "text": "Mondgewalt einsetzen"
+   },
+   "salvage": {
+    "spa": 2,
+    "aff": 1
+   },
+   "desc": "An Pokémon angelegt: ersetzt dessen Einsatz-Attacke durch Mondgewalt.",
+   "icon": "tm-fee"
+  },
+  {
+   "id": "nugget",
+   "name": "Nugget",
+   "kind": "treasure",
+   "rarity": 2,
+   "icon": "nugget",
+   "weight": 2.5,
+   "salvage": {
+    "gold": 2
+   },
+   "sell": 60,
+   "desc": "Wertvoll. Verkaufen bringt Gold."
+  },
+  {
+   "id": "big-nugget",
+   "name": "Riesennugget",
+   "kind": "treasure",
+   "rarity": 4,
+   "icon": "big-nugget",
+   "weight": 0.8,
+   "minFloor": 6,
+   "salvage": {
+    "gold": 4
+   },
+   "sell": 180,
+   "desc": "Sehr wertvoll."
+  },
+  {
+   "id": "wide-lens",
+   "name": "Großlinse",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "wide-lens",
+   "weight": 3,
+   "equip": [
+    {
+     "op": "chain",
+     "v": 0.12
+    },
+    {
+     "op": "atk",
+     "v": 2
+    }
+   ],
+   "salvage": {
+    "atk": 2
+   }
+  },
+  {
+   "id": "metronome",
+   "name": "Metronom",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "metronome",
+   "weight": 2,
+   "equip": [
+    {
+     "op": "ramp",
+     "v": 0.1
+    }
+   ],
+   "salvage": {
+    "spa": 3
+   },
+   "desc": "Jede Runde im Kampf +10 % Schaden (stapelt)."
+  },
+  {
+   "id": "black-sludge",
+   "name": "Giftschleim",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "black-sludge",
+   "weight": 2,
+   "stacks": {
+    "Gift": 2
+   },
+   "equip": [
+    {
+     "op": "regen",
+     "v": 0.04
+    },
+    {
+     "op": "poisonChance",
+     "v": 0.1
+    }
+   ],
+   "salvage": {
+    "hp": 3,
+    "aff": 1
+   }
+  },
+  {
+   "id": "soothe-bell",
+   "name": "Sanftglocke",
+   "kind": "held",
+   "rarity": 2,
+   "icon": "soothe-bell",
+   "weight": 3,
+   "stacks": {
+    "Fee": 1
+   },
+   "equip": [
+    {
+     "op": "healPct",
+     "v": 0.35
+    }
+   ],
+   "salvage": {
+    "spd": 3
+   }
+  },
+  {
+   "id": "big-root",
+   "name": "Großwurzel",
+   "kind": "held",
+   "rarity": 3,
+   "icon": "big-root",
+   "weight": 2,
+   "stacks": {
+    "Pflanze": 2
+   },
+   "equip": [
+    {
+     "op": "lifesteal",
+     "v": 0.08
+    },
+    {
+     "op": "leech",
+     "v": 0.02
+    }
+   ],
+   "salvage": {
+    "hp": 4,
+    "aff": 1
+   }
+  }
+ ]
+}
