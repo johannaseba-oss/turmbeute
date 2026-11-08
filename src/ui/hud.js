@@ -61,16 +61,24 @@ function renderActions(b) {
   }
   const mv = leadMoves(), cost = specialCost(), busy = b.busy, max = D.B.energy.max;
   const gain = D.B.energy.perTurn + Math.round(g(computeStats(run).mods, 'energyGain'));
-  a.replaceChildren(
-    h('div.energyrow', h('span.elabel', 'Energie'),
-      h('div.energy', ...Array.from({ length: max }, (_, i) => h('i', { class: (i < b.energy ? 'on' : '') + (i < cost ? ' need' : '') }))),
-      h('span.etext', `${b.energy}/${max} · +${gain} pro Runde · Spezial ${cost}, Rundum ${areaCost()}`)),
-    h('div.actrow',
-      h('button', { onclick: () => G.act('wait'), disabled: busy }, 'Warten', h('small', '+1 Energie, Heilung')),
-      h('button.main', { onclick: () => G.act('attack'), disabled: busy }, '⚔ Angriff', h('small', { style: { color: '#e8ffe8' } }, 'kostenlos')),
-      h('button.spec', { onclick: () => G.act('special'), disabled: busy || b.energy < cost }, mv.special.name, h('small', { style: { color: '#e0d8ff' } }, `${mv.special.type} · ${cost} Energie`)),
-      h('button.area', { onclick: () => G.act('area'), disabled: busy || b.energy < areaCost() }, 'Rundum', h('small', { style: { color: '#ffe0c0' } }, `alle · ${areaCost()} Energie`))),
-  );
+  const energy = h('div.energyrow', h('span.elabel', 'Energie'),
+    h('div.energy', ...Array.from({ length: max }, (_, i) => h('i', { class: (i < b.energy ? 'on' : '') + (i < cost ? ' need' : '') }))),
+    h('span.etext', `${b.energy}/${max} · +${gain} pro Runde`));
+  // Zielwahl läuft: Hinweis statt Knöpfen
+  if (G.aim) {
+    const n = alive().length, all = G.aim.all;
+    a.replaceChildren(energy, h('div.aimbar', { class: 'aimbar' + (all ? ' all' : '') },
+      h('div.aimtext', all ? h('b', `✸ Fläche: trifft alle ${n} Gegner`) : h('b', '🎯 Ziel wählen'), h('small', all ? 'Tippe auf die Gegner oder „Los“' : 'Tippe auf den Gegner, den du angreifen willst')),
+      all ? h('button.go', { onclick: () => G.confirmAim() }, '✔ Los') : null,
+      h('button.cancel', { onclick: () => G.cancelAim() }, 'Abbrechen')));
+    return;
+  }
+  const btn = (cls, icon, name, sub, onclick, disabled) => h('button', { class: cls, onclick, disabled }, h('span.bt', h('i', icon), h('span', name)), h('small', sub));
+  a.replaceChildren(energy, h('div.actgrid',
+    btn('main', '⚔', 'Angriff', 'Einzelziel · kostenlos', () => G.aimOrAct('attack'), busy),
+    btn('spec', '✦', mv.special.name, `Einzelziel · ${mv.special.type} · ${cost}⚡`, () => G.aimOrAct('special'), busy || b.energy < cost),
+    btn('area', '✸', 'Rundumschlag', `FLÄCHE · alle Gegner · ${areaCost()}⚡`, () => G.aimOrAct('area'), busy || b.energy < areaCost()),
+    btn('wait', '⏳', 'Warten', '+1⚡ · etwas Heilung', () => G.act('wait'), busy)));
 }
 
 export function renderTeam() {

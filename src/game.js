@@ -181,6 +181,7 @@ export const G = {
     stage.trainer = null;
     stage.setScene(run.team[0].dex, []);
     renderHud();
+    for (const e of [...fight.enemies, ...(fight.reserve || [])]) stage.preload(e.dex);
     const kind = R.fightKind(), N = D.B.areal.fights;
     if (run.fight === 1) await banner(`Areal ${run.areal}`, `${N} Kämpfe · am Ende ein Trainer und ein Legendäres`, 1100);
     if (kind === 'trainer') { const t = fight.trainer; stage.trainer = t.sprite; await banner(`${t.title} ${t.name}`, `Endboss · ${t.size} ${t.type}-Pokémon`, 1300); }
@@ -190,6 +191,26 @@ export const G = {
     await K.startBattle(fight.enemies, fight);
     G.refresh();
   },
+  // Bei mehreren Gegnern erst Ziel wählen (Fläche: alle markiert, bestätigen)
+  aim: null,
+  aimOrAct(action) {
+    const n = K.alive().length;
+    if (n > 1 && ['attack', 'special', 'area'].includes(action)) {
+      G.aim = { action, all: action === 'area' };
+      stage.aim = G.aim.all ? 'all' : 'one';
+      sfx('fp_klick', 0.3);
+      return renderHud();
+    }
+    G.act(action);
+  },
+  cancelAim() { G.aim = null; stage.aim = null; renderHud(); },
+  confirmAim(uid = null) {
+    const a = G.aim;
+    if (!a) return;
+    if (uid) { run.battle.targetUid = uid; stage.targetUid = uid; }
+    G.aim = null; stage.aim = null;
+    G.act(a.action);
+  },
   pickTarget(ev) {
     const b = run?.battle;
     if (!b || run.phase !== 'battle') return;
@@ -197,10 +218,14 @@ export const G = {
     const px = (ev.clientX - r.left) * k, py = (ev.clientY - r.top) * k;
     let best = null, bd = Infinity;
     for (const e of K.alive()) { const p = stage.pos(e.uid); const d = Math.hypot(p.x - px, (p.y - 20 * stage.scale()) - py); if (d < bd) { bd = d; best = e; } }
-    if (best && bd < stage.c.width * 0.2) { b.targetUid = best.uid; stage.targetUid = best.uid; sfx('fp_klick', 0.25); }
+    if (best && bd < stage.c.width * 0.2) {
+      if (G.aim) return G.confirmAim(best.uid);
+      b.targetUid = best.uid; stage.targetUid = best.uid; sfx('fp_klick', 0.25);
+    }
   },
   async act(a, arg) {
     if (!run.battle || run.battle.busy) return;
+    if (G.aim) { G.aim = null; stage.aim = null; }
     const me = run;
     await K.act(a, arg);
     if (run !== me) return;

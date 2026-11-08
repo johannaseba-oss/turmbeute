@@ -31,7 +31,6 @@ export class Stage {
     this.t = performance.now();
     this.onTap = null;
     this.bg = null;
-    canvas.addEventListener('pointerdown', (ev) => this.tap(ev));
     const loop = (t) => { this.t = t; this.draw(); requestAnimationFrame(loop); };
     requestAnimationFrame(loop);
   }
@@ -57,6 +56,8 @@ export class Stage {
     for (const a of ['Idle', 'Attack', 'Hurt']) img(spriteUrl(dex, sp.anims[a].file));
     return { dex, side, anim: 'Idle', t0: this.t, flash: 0, shake: 0, alpha: 1, dy: 0, lunge: 0 };
   }
+  // Sprites vorladen (z. B. während des Kampf-Banners)
+  preload(dex) { const sp = mon(dex); for (const a of ['Idle', 'Attack', 'Hurt']) img(spriteUrl(dex, sp.anims[a].file)); }
   play(uid, anim) { const a = this.actors.get(uid); if (a) { a.anim = anim; a.t0 = this.t; } }
 
   // Positionen (Fußpunkt) in Canvas-Pixeln
@@ -292,7 +293,17 @@ export class Stage {
       x.strokeStyle = col; x.lineWidth = dpr; x.stroke();
       x.fillStyle = col; x.textAlign = 'center'; x.fillText(txt, bx + w / 2, iy + 11.5 * dpr);
     }
-    if (this.targetUid === e.uid && this.enemies.filter((q) => q.hp > 0).length > 1) {
+    // Zielwahl: alle wählbaren Gegner pulsieren (gelb), bei Fläche rotes Fadenkreuz auf allen
+    if (this.aim && e.hp > 0) {
+      const pulse = 0.5 + 0.5 * Math.sin(this.t / 140), r = (11 + pulse * 2.5) * this.scale();
+      x.save();
+      x.strokeStyle = this.aim === 'all' ? '#ff5a4a' : '#ffd84a';
+      x.lineWidth = 2.5 * dpr; x.globalAlpha = 0.6 + pulse * 0.4;
+      x.beginPath(); x.ellipse(p.x, p.y - 2 * dpr, r, r * 0.35, 0, 0, Math.PI * 2); x.stroke();
+      if (this.aim === 'all') { for (const ang of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) { x.beginPath(); x.moveTo(p.x + Math.cos(ang) * r * 0.7, p.y - 2 * dpr + Math.sin(ang) * r * 0.25); x.lineTo(p.x + Math.cos(ang) * r * 1.2, p.y - 2 * dpr + Math.sin(ang) * r * 0.42); x.stroke(); } }
+      else { const ty = p.y - 46 * this.scale() - pulse * 5 * dpr, sz = 7 * dpr; x.fillStyle = '#ffd84a'; x.beginPath(); x.moveTo(p.x, ty + sz); x.lineTo(p.x - sz, ty); x.lineTo(p.x + sz, ty); x.fill(); }
+      x.restore();
+    } else if (this.targetUid === e.uid && this.enemies.filter((q) => q.hp > 0).length > 1) {
       const sz = 6 * dpr, ty = p.y + 8 * dpr;
       x.fillStyle = '#ffd84a'; x.beginPath(); x.moveTo(p.x, ty); x.lineTo(p.x - sz, ty + sz); x.lineTo(p.x + sz, ty + sz); x.fill();
     }

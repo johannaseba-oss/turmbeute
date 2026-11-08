@@ -246,3 +246,22 @@ b.plus, b.minus { font-weight: 700; }
 /* Rundumschlag */
 #actions .area { background: linear-gradient(#d07a3a, #8a4a1a); border-color: #ffb070; }
 #actions .actrow button { min-width: 0; }
+
+/* Kampf-Knöpfe als 2×2-Raster, Texte passen immer */
+#actions .actgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+#actions .actgrid button { min-width: 0; min-height: 44px; padding: 4px 8px; align-items: flex-start; text-align: left; }
+#actions .actgrid .bt { display: flex; align-items: center; gap: 5px; width: 100%; font-size: 14px; white-space: nowrap; overflow: hidden; }
+#actions .actgrid .bt span { overflow: hidden; text-overflow: ellipsis; }
+#actions .actgrid .bt i { font-style: normal; flex: none; width: 16px; text-align: center; }
+#actions .actgrid small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; color: #ffffffbb; }
+#actions .actgrid .main { font-size: 14px; }
+#actions .actgrid .area small { color: #fff; font-weight: 700; letter-spacing: .2px; }
+#actions .actgrid .wait { background: var(--panel2); }
+/* Zielwahl-Leiste */
+.aimbar { display: flex; align-items: center; gap: 6px; min-height: 50px; padding: 4px 6px; border-radius: 9px; background: #2a2450; border: 2px solid #ffd84a; animation: pulse 1.1s infinite; }
+.aimbar.all { border-color: #ff5a4a; }
+.aimbar .aimtext { flex: 1; display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.aimbar .aimtext b { font-size: 14px; }
+.aimbar .aimtext small { font-size: 11px; color: var(--muted); }
+#actions .aimbar button { flex: none; padding: 8px 12px; min-height: 40px; }
+#actions .aimbar .go { background: linear-gradient(#d07a3a, #8a4a1a); border-color: #ffb070; }
