@@ -1,4 +1,4 @@
-// Kampfbühne: Canvas mit PMD-Sprites (Idle/Attack/Hurt), Effekt-Sheets, Schadenszahlen, Ballwurf.
+// Kampfbühne: Canvas mit PMD-Sprites (Idle/Attack/Hurt), Effekt-Sheets, Schadenszahlen, Ballwurf. Hintergrund-Ausschnitt nach balance.backgrounds.crops.
 // Sheets: Zeilen = 8 Blickrichtungen (2 = rechts, 6 = links).
 import { D, mon, spriteUrl, typeColor, itemIconUrl, artUrl } from '../data.js';
 
@@ -97,14 +97,14 @@ export class Stage {
     if (ok(bgi)) {
       // Bild füllend (Ausschnitt mittig), etwas abgedunkelt, Boden-Verlauf für Kontrast unter den Sprites
       x.imageSmoothingEnabled = false;
-      const k = Math.max(W / bgi.naturalWidth, H / bgi.naturalHeight);
-      const dw = bgi.naturalWidth * k, dh = bgi.naturalHeight * k;
-      x.drawImage(bgi, (W - dw) / 2, (H - dh) / 2, dw, dh);
+      // Ausschnitt so, dass die Bodenfläche (floorY) auf Fußhöhe der Pokémon liegt
+      const iw = bgi.naturalWidth, ih = bgi.naturalHeight, cr = D.B.backgrounds.crops?.[this.bgId] || { cx: iw / 2, floorY: ih * 0.75, vh: ih };
+      let vh = Math.min(cr.vh, ih), vw = vh * (W / H);
+      if (vw > iw) { vw = iw; vh = vw / (W / H); }
+      const sx = Math.max(0, Math.min(iw - vw, cr.cx - vw / 2)), sy = Math.max(0, Math.min(ih - vh, cr.floorY - 0.8 * vh));
+      x.drawImage(bgi, sx, sy, vw, vh, 0, 0, W, H);
       x.fillStyle = `rgba(12,10,24,${D.B.backgrounds?.dim ?? 0.3})`;
       x.fillRect(0, 0, W, H);
-      const fl = x.createLinearGradient(0, H * 0.55, 0, H);
-      fl.addColorStop(0, 'rgba(12,10,24,0)'); fl.addColorStop(1, 'rgba(12,10,24,0.55)');
-      x.fillStyle = fl; x.fillRect(0, 0, W, H);
       const v = x.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, W * 0.75);
       v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.5)');
       x.fillStyle = v; x.fillRect(0, 0, W, H);
@@ -155,9 +155,6 @@ export class Stage {
       const p = this.pos(uid), e = this.enemies?.find((q) => q.uid === uid);
       const big = e?.boss ? 1.35 : 1;
       const ss = Math.round(s * big);
-      x.globalAlpha = a.alpha * 0.5;
-      x.fillStyle = '#000';
-      x.beginPath(); x.ellipse(p.x, p.y, 13 * ss, 4 * ss, 0, 0, Math.PI * 2); x.fill();
       x.globalAlpha = a.alpha;
       const dir = a.side === 'p' ? 2 : 6;
       let f = this.frame(a.dex, a.anim, dir, this.t - a.t0);

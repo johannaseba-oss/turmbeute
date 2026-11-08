@@ -3,6 +3,9 @@ import { D, mon, itemDef, ri, rnd, pick, weighted, uid, clamp } from './data.js'
 import { baseStats, invSize, heldSlots, keystoneOps, sumOps, g, computeStats, allOps, STATS, equipOps, expFor, heldOf } from './mods.js';
 
 const SAVE = 'turmbeute.run.v3', META = 'turmbeute.meta.v1';
+// Bis zu 3 Läufe gleichzeitig, jeder in seinem Speicherplatz
+export const SLOTS = 3;
+const slotKey = (n) => `${SAVE}.slot${n}`;
 // ?nosave: Testläufe (Bot) schreiben nichts in den Speicher
 const NOSAVE = typeof location !== 'undefined' && location.search.includes('nosave');
 export let run = null;
@@ -10,9 +13,16 @@ export const setRun = (r) => (run = r);
 
 export function loadMeta() { try { return JSON.parse(localStorage.getItem(META)) || { best: 0, runs: 0 }; } catch { return { best: 0, runs: 0 }; } }
 export function saveMeta(m) { if (NOSAVE) return; try { localStorage.setItem(META, JSON.stringify(m)); } catch {} }
-export function save() { if (NOSAVE) return; try { if (run) localStorage.setItem(SAVE, JSON.stringify(run)); } catch {} }
-export function loadSaved() { try { return JSON.parse(localStorage.getItem(SAVE)); } catch { return null; } }
-export function clearSave() { if (NOSAVE) return; try { localStorage.removeItem(SAVE); } catch {} }
+export function save() { if (NOSAVE) return; try { if (run) localStorage.setItem(slotKey(run.slot || 0), JSON.stringify(run)); } catch {} }
+export function loadSaved(n) {
+  try {
+    // alter Einzel-Spielstand wandert in Platz 1
+    if (n === 0 && !localStorage.getItem(slotKey(0)) && localStorage.getItem(SAVE)) { localStorage.setItem(slotKey(0), localStorage.getItem(SAVE)); localStorage.removeItem(SAVE); }
+    const r = JSON.parse(localStorage.getItem(slotKey(n)));
+    return r && r.v === 3 && r.phase !== 'over' ? r : null;
+  } catch { return null; }
+}
+export function clearSave(n = run?.slot || 0) { if (NOSAVE) return; try { localStorage.removeItem(slotKey(n)); } catch {} }
 
 // --- Items ---------------------------------------------------------------
 export function makeItem(id, floor = 1, r = null) {
@@ -210,10 +220,10 @@ export function giveExp(m, xp) {
 export function giveLevels(m, n) { giveExp(m, expFor(mon(m.dex).growth, m.level + n) - m.exp); }
 
 // --- Neuer Lauf ----------------------------------------------------------------
-export function newRun(dexes) {
+export function newRun(dexes, slot = 0) {
   const B = D.B;
   run = {
-    v: 3, areal: 1, fight: 0, floor: 1, phase: 'floor', gold: B.startGold, trainersSeen: [],
+    v: 3, slot, areal: 1, fight: 0, floor: 1, phase: 'floor', gold: B.startGold, trainersSeen: [],
     perm: Object.fromEntries(STATS.map((s) => [s, 0])), aff: {},
     team: [], inv: [], keystones: [],
     floorOps: [], floorStacks: {}, battle: null, shop: null, loot: null, events: [],

@@ -115,20 +115,29 @@ export const G = {
     G.title();
   },
   title() {
-    const saved = R.loadSaved(), meta = R.loadMeta();
+    const meta = R.loadMeta();
     const ov = $('#overlay');
     ov.classList.remove('hidden');
+    setMusic(null);
+    // Drei Speicherplätze: fortsetzen, löschen oder neu beginnen
+    const slot = (n) => {
+      const s = R.loadSaved(n);
+      if (!s) return h('div.saveslot.empty', h('div.sl-h', `Platz ${n + 1}`), h('div.hint', 'leer'), h('button.btn.gold', { onclick: () => starterScreen((dexes) => G.newRun(dexes, n)) }, 'Neuer Lauf'));
+      return h('div.saveslot', h('div.sl-h', `Platz ${n + 1}`, h('small', `Areal ${s.areal} · Kampf ${s.fight}`)),
+        h('div.sl-team', s.team.map((m) => h('img', { src: portraitUrl(m.dex), title: mon(m.dex).name }))),
+        h('div.sl-row', h('button.btn.pri', { onclick: () => G.resume(s) }, 'Fortsetzen'),
+          h('button.btn.warn', { onclick: (e) => { if (e.currentTarget.dataset.sure) { R.clearSave(n); G.title(); } else { e.currentTarget.dataset.sure = 1; e.currentTarget.textContent = 'Wirklich löschen?'; } } }, 'Löschen')));
+    };
     ov.replaceChildren(
       h('div.title', 'TURMBEUTE'),
       h('div.subtitle', 'Erklimme den endlosen Turm. Fange, sammle, zerlege – und bau dir den absurdesten Build.'),
       h('div.menu',
-        saved && saved.v === 3 && saved.phase !== 'over' ? h('button.btn.pri', { onclick: () => G.resume(saved) }, `Fortsetzen`, h('small', `Areal ${saved.areal} · Kampf ${saved.fight} · ${mon(saved.team[0].dex).name}`)) : null,
-        h('button.btn.gold', { onclick: () => starterScreen((dexes) => G.newRun(dexes)) }, 'Neuer Lauf'),
+        ...Array.from({ length: R.SLOTS }, (_, n) => slot(n)),
         h('button.btn', { onclick: (e) => { const on = toggleSound(); e.currentTarget.textContent = on ? 'Ton: an' : 'Ton: aus'; } }, soundOn() ? 'Ton: an' : 'Ton: aus'),
         meta.best ? h('div.hint', { style: { textAlign: 'center' } }, `Rekord: ${progText(meta.best)} · ${meta.runs} Läufe`) : null));
   },
-  newRun(dexes) {
-    R.newRun(dexes);
+  newRun(dexes, slot = 0) {
+    R.newRun(dexes, slot);
     const m = R.loadMeta(); m.runs++; R.saveMeta(m);
     $('#overlay').classList.add('hidden');
     setMusic('zeitturm.mp3');
@@ -397,6 +406,7 @@ export const G = {
     openSheet(h('h3', 'Menü'), h('div.btns',
       h('button.btn', { onclick: (e) => { const on = toggleSound(); e.currentTarget.textContent = on ? 'Ton: an' : 'Ton: aus'; } }, soundOn() ? 'Ton: an' : 'Ton: aus'),
       h('button.btn', { onclick: () => help() }, 'Spielregeln'),
+      run && run.phase !== 'over' ? h('button.btn', { onclick: () => { closeSheet(); R.save(); run.battle && (run.battle.busy = false); G.title(); } }, 'Speichern & zum Titel') : null,
       run && run.phase !== 'over' ? h('button.btn.warn', { onclick: () => { closeSheet(); run.team.forEach((m) => (m.fainted = true)); G.gameOver(); } }, 'Lauf aufgeben') : null,
       h('button.btn', { onclick: closeSheet }, 'Schließen')));
   },

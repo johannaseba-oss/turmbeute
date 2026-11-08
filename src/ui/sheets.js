@@ -39,13 +39,13 @@ export function itemHead(inst) {
 }
 export function itemInfo(inst) {
   const def = itemDef(inst.id);
-  const eq = [...Object.entries(itemStacks(inst)).map(([t, n]) => `+${n} ${t}-Stacks`), ...equipOps(inst).map(opText)];
-  if (def.tm) eq.push(`An Pokémon: Einsatz-Attacke wird ${def.tm.name}`);
-  if (def.kind === 'stone') eq.push('An passendes Pokémon: sofortige Entwicklung');
+  const eq = [...Object.entries(itemStacks(inst)).map(([t, n]) => li(`+${n} ${t}-Stacks`, 'plus')), ...equipOps(inst).map((o) => li(opText(o), opClass(o)))];
+  if (def.tm) eq.push(li(`An Pokémon: Einsatz-Attacke wird ${def.tm.name}`));
+  if (def.kind === 'stone') eq.push(li('An passendes Pokémon: sofortige Entwicklung'));
   const us = useLines(inst);
   return h('ul.fx',
     def.desc ? li(def.desc) : null,
-    eq.length ? [li('Anlegen', 'h'), ...eq.map((t) => li(t))] : null,
+    eq.length ? [li('Anlegen', 'h'), ...eq] : null,
     us.length ? [li('Verbrauchen', 'h'), ...us.map((t) => li(t))] : null,
     def.kind === 'ball' ? li(ballText(def)) : null,
     li('Zerlegen', 'h'), li(gainText(salvageGain(inst)), 'on'));
@@ -69,6 +69,22 @@ export function itemTip(inst, extra = null) {
   const t = mergeTargets(inst)[0];
   return [itemHead(inst), extra ? h('div.tipx', extra) : null, itemInfo(inst), t ? h('div.tipup', '↑ Aufwertbar ' + mergeLabel(inst, t)) : null];
 }
+
+// Werte eines Pokémon mit dem Anteil, den seine Items beisteuern (grünes Plus)
+function statRow(m, extra = []) {
+  const full = computeStats(run, extra, m).stats;
+  const held = m.held;
+  m.held = [];
+  const bare = computeStats(run, extra, m).stats;
+  m.held = held;
+  return h('li.stats', ...STATS.map((st) => {
+    const d = full[st] - bare[st];
+    return h('span.st', `${STAT_NAME[st]} ${fmt(full[st])}`, d > 0 ? h('b.plus', ` +${fmt(d)}`) : d < 0 ? h('b.minus', ` ${fmt(d)}`) : null);
+  }));
+}
+// Vorteil grün, Nachteil rot (bei manchen Ops ist ein negativer Wert gut)
+const GOOD_NEG = new Set(['dmgTaken', 'enemyAtk', 'enemySpe', 'specialCost']);
+const opClass = (o) => ((o.v < 0) !== GOOD_NEG.has(o.op) ? 'minus' : 'plus');
 
 // --- Item im Inventar ----------------------------------------------------------
 export function itemSheet(idx) {
@@ -148,11 +164,11 @@ export function monSheet(i) {
       li('Passiv', 'h'),
       li(sp.types.map((t, k) => `+${k === 0 ? st.mainType : st.subType} ${t}-Stacks`).join(', ')),
       li('Fähigkeit: ' + opText(perk), 'on'),
-      li('Werte (mit eigenen Items)', 'h'),
-      li(STATS.map((s) => `${STAT_NAME[s]} ${fmt(stats[s])}`).join(' · ')),
+      li('Werte (grün = durch Items)', 'h'),
+      statRow(m),
       li('Spezial / Einsetzen', 'h'), li(`${mv.name} · ${mv.type} · Stärke ${Math.round(mv.power * 60)}`),
       evo ? [li('Entwicklung', 'h'), li(evo)] : null,
-      ...heldOf(m).map((it) => li(`${itemDef(it.id).name}: ` + [...Object.entries(itemStacks(it)).map(([t, n]) => `+${n} ${t}`), ...equipOps(it).map(opText)].join(', ')))),
+      ...heldOf(m).map((it) => h('li', `${itemDef(it.id).name}: `, ...Object.entries(itemStacks(it)).map(([t, n]) => h('span.plus', `+${n} ${t}  `)), ...equipOps(it).map((o) => h('span', { class: opClass(o) }, opText(o) + '  '))))),
     h('div.btns', btns));
 }
 function confirmSac(i) {
@@ -202,7 +218,8 @@ export function statsSheet() {
   const ks = run.keystones.map((id) => D.keystones.find((k) => k.id === id)).filter(Boolean);
   const keys = ['dmgPct', 'crit', 'evasion', 'lifesteal', 'regen', 'dmgTaken', 'chain', 'doubleHit', 'gold', 'catch'].filter((k) => g(mods, k)).map((k) => opText({ op: k, v: mods[k] }));
   openSheet(h('h3', 'Deine Werte'), h('ul.fx',
-    li(STATS.map((s) => `${STAT_NAME[s]} ${fmt(stats[s])}`).join(' · ')),
+    li(`${mon(run.team[0].dex).name} (Anführer) – grün = durch Items`, 'h'),
+    statRow(run.team[0], B()?.buffs || []),
     keys.length ? [li('Boni', 'h'), ...keys.map((t) => li(t))] : null,
     li('Zerlegt (permanent)', 'h'), li(perm), li('Affinität', 'h'), li(aff),
     ks.length ? [li('Keystones', 'h'), ...ks.map((k) => li(`${k.name}: ${k.text}`, 'on'))] : null,

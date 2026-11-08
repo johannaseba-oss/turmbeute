@@ -1,4 +1,4 @@
-// Starter: Typ wählen → Spielautomat: drei Walzen ziehen drei Basis-Pokémon (eins vom gewählten Typ, zwei zufällig) → Team.
+// Starter: Spielautomat – drei Walzen ziehen drei zufällige Basis-Pokémon auf Lv 1 → Team.
 import { D, mon, portraitUrl, typeColor, artUrl, pick, rnd } from '../data.js';
 import { monPerk, opText } from '../mods.js';
 import { $, h } from './dom.js';
@@ -30,17 +30,14 @@ export function rollStarters(type = null) {
 export function starterScreen(done) {
   const ov = $('#overlay');
   ov.classList.remove('hidden');
-  const S = D.B.starter;
-  ov.replaceChildren(h('div.title', { style: { fontSize: '30px', marginBottom: '6px' } }, 'Starter-Typ'),
-    h('div.subtitle', { style: { margin: '0 0 14px' } }, 'Der Automat zieht dein Team: ein Basis-Pokémon dieses Typs und zwei zufällige, alle auf Lv 1.'),
-    h('div.typegrid', S.types.map((t) => h('button', { style: { background: typeColor(t) }, onclick: () => slots(t, done, S.rerolls) }, t))));
+  slots(null, done, D.B.starter.rerolls);
 }
 
 function slots(type, done, rerolls) {
   const ov = $('#overlay');
   const c = h('canvas', { width: CW * 3, height: CH * 3 });
   const reveal = h('div.reveal');
-  ov.replaceChildren(h('div.title', { style: { fontSize: '26px', marginBottom: '8px' } }, type), h('div.slotwrap', c), reveal);
+  ov.replaceChildren(h('div.title', { style: { fontSize: '26px', marginBottom: '4px' } }, 'Dein Team'), h('div.subtitle', { style: { margin: '0 0 8px' } }, 'Drei zufällige Basis-Pokémon auf Lv 1'), h('div.slotwrap', c), reveal);
   const x = c.getContext('2d');
   x.imageSmoothingEnabled = false;
   const sheet = img(artUrl('slots/sheet.png'));

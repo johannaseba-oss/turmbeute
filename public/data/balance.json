@@ -286,7 +286,7 @@
   },
   "startTeam": 3,
   "backgrounds": {
-    "_hinweis": "Kampf-Hintergründe (public/art/bg/<id>.png): wechseln mit jedem Abschnitt zwischen zwei Rasten (Reihenfolge pro Lauf gemischt), Legendäre und Trainer aus boss.",
+    "_hinweis": "Kampf-Hintergründe (public/art/bg/<id>.png): wechseln mit jedem Abschnitt zwischen zwei Rasten (Reihenfolge pro Lauf gemischt), Trainer und Legendäre aus boss. crops: Ausschnitt je Bild in Bild-Pixeln – cx = Mitte, floorY = Bodenhöhe, auf der die Pokémon stehen (80 % der Bühnenhöhe), vh = sichtbare Höhe.",
     "normal": [
       "D05P11A",
       "D06P11A",
@@ -298,16 +298,92 @@
       "D13P11A",
       "D14P11A",
       "D14P12A",
-      "D17P11A",
       "D24P11A",
       "D25P11A"
     ],
     "boss": [
-      "D17P33A",
-      "V00P01",
-      "D26P43A"
+      "D17P11A",
+      "D26P43A",
+      "D17P33A"
     ],
-    "dim": 0.3
+    "dim": 0.2,
+    "crops": {
+      "D05P11A": {
+        "cx": 270,
+        "floorY": 235,
+        "vh": 250
+      },
+      "D06P11A": {
+        "cx": 200,
+        "floorY": 290,
+        "vh": 240
+      },
+      "D07P11A": {
+        "cx": 230,
+        "floorY": 185,
+        "vh": 210
+      },
+      "D09P11A": {
+        "cx": 250,
+        "floorY": 285,
+        "vh": 290
+      },
+      "D10P41A": {
+        "cx": 325,
+        "floorY": 380,
+        "vh": 320
+      },
+      "D11P11A": {
+        "cx": 225,
+        "floorY": 330,
+        "vh": 270
+      },
+      "D12P41A": {
+        "cx": 280,
+        "floorY": 330,
+        "vh": 290
+      },
+      "D13P11A": {
+        "cx": 230,
+        "floorY": 390,
+        "vh": 290
+      },
+      "D14P11A": {
+        "cx": 230,
+        "floorY": 255,
+        "vh": 250
+      },
+      "D14P12A": {
+        "cx": 300,
+        "floorY": 230,
+        "vh": 220
+      },
+      "D17P11A": {
+        "cx": 300,
+        "floorY": 280,
+        "vh": 280
+      },
+      "D17P33A": {
+        "cx": 225,
+        "floorY": 250,
+        "vh": 170
+      },
+      "D24P11A": {
+        "cx": 260,
+        "floorY": 300,
+        "vh": 270
+      },
+      "D25P11A": {
+        "cx": 420,
+        "floorY": 340,
+        "vh": 290
+      },
+      "D26P43A": {
+        "cx": 260,
+        "floorY": 400,
+        "vh": 290
+      }
+    }
   },
   "areal": {
     "_hinweis": "Ein Areal = fights Kämpfe: wild bis trainerAt-1, Kampf trainerAt = Trainer-Endboss, legendAt = Legendäres. Rast (Heilung, Shop) nach restAfter und am Areal-Ende (dann auch Keystone). wild: Basiswert-Summe der wilden Pokémon steigt je Kampf/Areal; die ersten routeFights Kämpfe im 1. Areal kommen aus route (Nager, kleine Vögel, Käfer).",
