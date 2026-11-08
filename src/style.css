@@ -194,3 +194,10 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; }
 .pr.ok { color: #6cf08a; }
 .pr.no { color: #ff6a7a; }
 .btn.no { opacity: .55; box-shadow: 0 0 0 2px #ff4a5a; }
+
+/* Kampf-Knöpfe mit Energie-Zeile */
+#actions { flex-direction: column; gap: 4px; }
+#actions .actrow { display: flex; gap: 6px; min-height: 46px; }
+.energyrow { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--muted); }
+.energyrow .elabel { color: var(--energy); font-weight: 700; }
+.energyrow .energy i.need { border-color: #a890ff; }

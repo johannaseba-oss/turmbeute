@@ -2,6 +2,7 @@
 import { D, mon, itemDef, portraitUrl, itemIconUrl, typeColor, rarityColor } from '../data.js';
 import { computeStats, g, heldOf, heldSlots, expFor } from '../mods.js';
 import { run, ensureInv, fixHp } from '../run.js';
+import * as R from '../run.js';
 import { B, specialCost, leadMoves, alive } from '../combat.js';
 import { STATUS_ICON } from '../gfx/stage.js';
 import { $, h, fmt } from './dom.js';
@@ -15,8 +16,9 @@ export function renderHud() {
   const { stats, mods, stacks, active } = computeStats(run, B()?.buffs || []);
   const b = B();
   // Kopf
-  const boss = run.floor % D.B.floor.bossEvery === 0;
-  $('#floorinfo').replaceChildren(h('span', `Floor ${run.floor}`), h('small', boss ? '★ Boss' : run.phase === 'rest' || run.phase === 'keystone' ? 'Rast' : `Kampf ${Math.max(1, run.fight)}/${run.fights}`));
+  const kind = R.fightKind(), N = D.B.areal.fights;
+  const sub = run.phase === 'rest' || run.phase === 'keystone' ? 'Rast' : kind === 'trainer' ? `Kampf ${run.fight}/${N} · Trainer` : kind === 'legend' ? `Kampf ${run.fight}/${N} · Legendär` : `Kampf ${Math.max(1, run.fight)}/${N}`;
+  $('#floorinfo').replaceChildren(h('span', `Areal ${run.areal}`), h('small', sub));
   $('#gold').textContent = fmt(run.gold);
   // Anführer
   const L = run.team[0];
@@ -33,7 +35,6 @@ export function renderHud() {
       h('div.statline', { onclick: () => statsSheet() },
         ...[['ANG', 'atk'], ['ABW', 'def'], ['SP.A', 'spa'], ['SP.V', 'spd'], ['INIT', 'spe']].map(([n, k]) => h('span', n + ' ', h('b', fmt(stats[k])))),
         pst ? h('span.pst', pst) : null)),
-    b ? h('div.energy', { title: 'Energie' }, ...Array.from({ length: D.B.energy.max }, (_, i) => h('i', { class: i < b.energy ? 'on' : '' }))) : '',
   );
   renderActions(b);
   // Stacks
@@ -51,15 +52,20 @@ export function renderHud() {
 function renderActions(b) {
   const a = $('#actions');
   if (run.phase !== 'battle' || !b) {
-    const label = { loot: 'Weiter', rest: `Weiter zu Floor ${run.floor + 1}`, keystone: 'Keystone wählen' }[run.phase];
+    const label = { loot: 'Weiter', rest: run.fight >= D.B.areal.fights ? `Weiter zu Areal ${run.areal + 1}` : `Weiter zu Kampf ${run.fight + 1}`, keystone: 'Keystone wählen' }[run.phase];
     a.replaceChildren(label ? h('button.wide', { onclick: () => G.next(), disabled: run.phase === 'keystone' }, label) : '');
     return;
   }
-  const mv = leadMoves(), cost = specialCost(), busy = b.busy;
+  const mv = leadMoves(), cost = specialCost(), busy = b.busy, max = D.B.energy.max;
+  const gain = D.B.energy.perTurn + Math.round(g(computeStats(run).mods, 'energyGain'));
   a.replaceChildren(
-    h('button', { onclick: () => G.act('wait'), disabled: busy }, 'Warten', h('small', '+Energie, Heilung')),
-    h('button.main', { onclick: () => G.act('attack'), disabled: busy }, '⚔ Angriff', h('small', { style: { color: '#e8ffe8' } }, 'neutral')),
-    h('button.spec', { onclick: () => G.act('special'), disabled: busy || b.energy < cost }, mv.special.name, h('small', { style: { color: '#e0d8ff' } }, `${mv.special.type} · ⚡${cost}`)),
+    h('div.energyrow', h('span.elabel', 'Energie'),
+      h('div.energy', ...Array.from({ length: max }, (_, i) => h('i', { class: (i < b.energy ? 'on' : '') + (i < cost ? ' need' : '') }))),
+      h('span.etext', `${b.energy}/${max} · +${gain} pro Runde · Spezial kostet ${cost}`)),
+    h('div.actrow',
+      h('button', { onclick: () => G.act('wait'), disabled: busy }, 'Warten', h('small', '+1 Energie, Heilung')),
+      h('button.main', { onclick: () => G.act('attack'), disabled: busy }, '⚔ Angriff', h('small', { style: { color: '#e8ffe8' } }, 'kostenlos')),
+      h('button.spec', { onclick: () => G.act('special'), disabled: busy || b.energy < cost }, mv.special.name, h('small', { style: { color: '#e0d8ff' } }, `${mv.special.type} · ${cost} Energie`))),
   );
 }
 

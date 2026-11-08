@@ -3227,6 +3227,20 @@
     "hp": 4,
     "aff": 1
    }
+  },
+  {
+   "id": "ep-teiler",
+   "name": "EP-Teiler",
+   "kind": "key",
+   "rarity": 3,
+   "icon": "ep-teiler",
+   "weight": 0.8,
+   "minFloor": 6,
+   "desc": "Solange du ihn besitzt (im Inventar oder an einem Pokémon), bekommen alle Team-Pokémon, die nicht gekämpft haben, die Hälfte der EP.",
+   "salvage": {
+    "all": 1
+   },
+   "sell": 30
   }
  ]
 }

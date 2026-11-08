@@ -16,13 +16,15 @@ Läuft auf `http://localhost:5198`. Durch `--host` ist es auch im WLAN erreichba
 ## Ablauf
 
 1. Starter-Typ wählen → Spielautomat zieht 3 Basis-Pokémon auf Lv 1 (eins vom Typ, zwei zufällig; 1× nochmal drehen).
-2. Jeder Floor: 1–3 Kämpfe, alle 10 Floors ein Boss (ab Floor 20 Legendäre).
+2. Ein Areal hat 15 Kämpfe: 1–13 wilde Pokémon (im 1. Areal erst Nager, kleine Vögel, Käfer, dann stärkere), 14 ein Trainer-Endboss mit Themen-Team eines Typs (Areal 1: 2 Pokémon, jedes Areal eins mehr bis 6, nacheinander, nicht fangbar), 15 ein Legendäres passend zum Level. Danach das nächste, stärkere Areal.
 3. Nach jedem Kampf Beute (nehmen oder sofort zerlegen), gefangene Pokémon aufnehmen/tauschen.
-4. Nach dem Floor Rast: alle geheilt und wiederbelebt, Shop (grün = bezahlbar, rot = zu teuer), alle 5 Floors und nach Bossen ein Keystone. Verkaufen geht außerhalb des Kampfes jederzeit.
+4. Rast nach Kampf 5, 10, 13 und am Areal-Ende: alle geheilt und wiederbelebt, Shop (grün = bezahlbar, rot = zu teuer), am Areal-Ende ein Keystone. Verkaufen geht außerhalb des Kampfes jederzeit.
 
-Team: Der Anführer kämpft allein mit seinen eigenen Werten (Pokémon-Formel nach Level) und bis zu 4 Items. Wird er K.O., kommt das nächste Pokémon; verloren ist erst, wenn alle besiegt sind. Besiegte Gegner geben EP (Kämpfer alles, die anderen die Hälfte), Level ohne Obergrenze, Entwicklungen nach Level oder Stein. Typ-Stacks und Fähigkeiten aller Team-Pokémon gelten fürs ganze Team, Item-Effekte nur für den Träger (außer Gold/Fangen/Shop-Boni).
+Team: Der Anführer kämpft allein mit seinen eigenen Werten (Pokémon-Formel nach Level) und bis zu 4 Items. Wird er K.O., kommt das nächste Pokémon; verloren ist erst, wenn alle besiegt sind. Besiegte Gegner geben EP an den Kämpfer; mit dem Item EP-Teiler (Shop oder erster Trainer-Sieg) bekommen die anderen die Hälfte, Level ohne Obergrenze, Entwicklungen nach Level oder Stein. Typ-Stacks und Fähigkeiten aller Team-Pokémon gelten fürs ganze Team, Item-Effekte nur für den Träger (außer Gold/Fangen/Shop-Boni).
 
-Kampf-Hintergründe wechseln je Floor (PMD-Dungeon-Bilder aus D:/Pokemon Sprites/Hintergründe, Boss-Floors eigene).
+Kampf-Hintergründe wechseln mit jedem Abschnitt zwischen zwei Rasten (PMD-Dungeon-Bilder aus D:/Pokemon Sprites/Hintergründe), Trainer und Legendäre haben eigene. Trainer-Sprites: public/art/trainers (aus Freundesareale).
+
+Energie: Zeile über den Kampf-Knöpfen; +1 pro Runde (Warten +1 extra), Spezial kostet sie.
 
 Kampfaktionen: Angriff (neutral), Spezial (Typ des Anführers, kostet Energie), Warten, Item verbrauchen, Ball werfen, Pokémon einsetzen (starke Attacke, danach bis zum nächsten Floor erschöpft) oder opfern (Floor-Boost + permanente Affinität). Gegner antippen = anvisieren; über jedem Gegner steht seine nächste Absicht.
 
@@ -36,6 +38,7 @@ Fangen: Formel wie im Original (KP, Fangrate der Art, Ball, Status), 4 Schüttel
 | `items.json` | Items: `stacks` (Typ-Stacks beim Anlegen), `equip` (Ops), `use` (Verbrauchen), `trigger`, `salvage`, `catch` (Bälle), `tm`, `stone` |
 | `stacks.json` | Effekte je Typ-Stack (`per`), Schwellen (`tiers` ab 4/8/12), Synergien mit Entladung (`burst`) |
 | `keystones.json` | Lauf-weite Regeländerungen |
+| `trainers.json` | Trainer-Endbosse (Typ, Titel, Name, optional Sprite) |
 | `pokemon.json` | erzeugt (siehe unten) |
 | `types.json` | Typentabelle + Farben |
 

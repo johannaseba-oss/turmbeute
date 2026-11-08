@@ -1,7 +1,7 @@
 // Lädt alle JSON-Daten aus public/data und bietet Nachschlage-Helfer.
 const base = import.meta.env.BASE_URL;
 export const D = {};
-const FILES = ['pokemon', 'items', 'balance', 'types', 'stacks', 'keystones', 'vfx_sheets'];
+const FILES = ['pokemon', 'items', 'balance', 'types', 'stacks', 'keystones', 'vfx_sheets', 'trainers'];
 
 export async function loadData() {
   const all = await Promise.all(FILES.map((f) => fetch(`${base}data/${f}.json`).then((r) => r.json())));

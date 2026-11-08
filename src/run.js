@@ -2,7 +2,7 @@
 import { D, mon, itemDef, ri, rnd, pick, weighted, uid, clamp } from './data.js';
 import { baseStats, invSize, heldSlots, keystoneOps, sumOps, g, computeStats, allOps, STATS, equipOps, expFor, heldOf } from './mods.js';
 
-const SAVE = 'turmbeute.run.v2', META = 'turmbeute.meta.v1';
+const SAVE = 'turmbeute.run.v3', META = 'turmbeute.meta.v1';
 // ?nosave: Testläufe (Bot) schreiben nichts in den Speicher
 const NOSAVE = typeof location !== 'undefined' && location.search.includes('nosave');
 export let run = null;
@@ -186,7 +186,7 @@ export function giveLevels(m, n) { giveExp(m, expFor(mon(m.dex).growth, m.level 
 export function newRun(dexes) {
   const B = D.B;
   run = {
-    v: 2, floor: 1, fight: 0, fights: 1, phase: 'floor', gold: B.startGold,
+    v: 3, areal: 1, fight: 0, floor: 1, phase: 'floor', gold: B.startGold, trainersSeen: [],
     perm: Object.fromEntries(STATS.map((s) => [s, 0])), aff: {},
     team: [], inv: [], keystones: [],
     floorOps: [], floorStacks: {}, battle: null, shop: null, loot: null, events: [],
@@ -195,43 +195,70 @@ export function newRun(dexes) {
   for (const dex of dexes) addMon(makeMon(dex, B.level.start));
   ensureInv();
   for (const id of B.startItems) addItem(makeItem(id, 1));
-  startFloor();
+  startSegment();
   return run;
 }
-export const isBossFloor = (f) => f % D.B.floor.bossEvery === 0;
+// --- Areal: bis zu 15 Kämpfe (wild → Trainer-Endboss → Legendäres), Rast nach bestimmten Kämpfen ---
+// run.floor = Fortschritt über alle Areale (Kampf-Nummer insgesamt), skaliert Gegner, Items und Preise.
+export const AR = () => D.B.areal;
+export function fightKind(fight = run.fight) {
+  if (fight === AR().legendAt) return 'legend';
+  if (fight === AR().trainerAt) return 'trainer';
+  return 'wild';
+}
+export const progressOf = (areal, fight) => (areal - 1) * AR().fights + fight;
+export const ownsItem = (id) => [...run.inv, ...run.team.flatMap((m) => m.held)].some((it) => it?.id === id);
+export const isRestAfter = (fight) => AR().restAfter.includes(fight) || fight === AR().fights;
 
-export function startFloor() {
+// Abschnitt beginnt (Spielstart und nach jeder Rast): Opfer-/Floor-Boni und erschöpfte Pokémon zurücksetzen
+export function startSegment() {
   run.floorOps = [];
   run.floorStacks = {};
   run.team.forEach((m) => (m.used = false));
-  run.fight = 0;
-  run.fights = isBossFloor(run.floor) ? 1 : ri(...D.B.floor.fights);
   run.phase = 'floor';
+}
+// Nächsten Kampf zählen (springt nach Kampf 15 ins nächste Areal)
+export function advanceFight() {
+  if (run.fight >= AR().fights) { run.areal++; run.fight = 0; }
+  run.fight++;
+  run.floor = progressOf(run.areal, run.fight);
 }
 
 // --- Gegner ------------------------------------------------------------------
-function maxStage(floor) { let s = 1; for (const [f, st] of D.B.enemy.stageByFloor) if (floor >= f) s = st; return s; }
-function spawnPool(floor, boss) {
-  const ms = maxStage(floor);
-  if (boss) {
-    const legends = floor >= D.B.enemy.legendaryBossFrom;
-    const pool = D.pokemon.filter((p) => (legends ? p.legendary || p.mythical : !p.legendary && !p.mythical && p.base.reduce((a, b) => a + b) >= 480 && p.evos.length === 0));
-    return pool;
+const bst = (p) => p.base.reduce((x, y) => x + y, 0);
+// Wilde Pokémon: zu Beginn eines Areals schwache "Routen-Pokémon" (Nager, kleine Vögel, Käfer), dann immer stärkere
+function wildPool(areal, fight) {
+  const W = AR().wild;
+  const cap = W.bstStart + W.bstPerFight * fight + W.bstPerAreal * (areal - 1);
+  const min = cap - W.bstWindow;
+  const ok = (p) => !p.legendary && !p.mythical && !p.baby;
+  if (areal === 1 && fight <= W.routeFights) {
+    const route = D.pokemon.filter((p) => ok(p) && W.route.includes(p.dex));
+    if (route.length) return route;
   }
-  return D.pokemon.filter((p) => !p.legendary && !p.mythical && p.stage <= ms && (p.stage >= ms - 1 || p.evos.length === 0 || floor < 6));
+  let pool = D.pokemon.filter((p) => ok(p) && bst(p) <= cap && bst(p) >= min);
+  if (pool.length < 10) pool = D.pokemon.filter((p) => ok(p) && bst(p) <= cap).sort((x, y) => bst(y) - bst(x)).slice(0, 40);
+  return pool;
 }
-export function enemyLevel(floor, boss = false) {
-  const E = D.B.enemy;
-  return Math.max(1, Math.round(E.levelBase + (floor - 1) * E.levelPerFloor) + ri(0, 1) + (boss ? E.boss.level : 0));
+// Legendäre: nach Basiswert-Summe sortiert, spätere Areale ziehen stärkere
+function legendPool(areal) {
+  const list = D.pokemon.filter((p) => p.legendary || p.mythical).sort((x, y) => bst(x) - bst(y));
+  const L = AR().legend, start = Math.min(list.length - L.window, (areal - 1) * L.step);
+  return list.slice(Math.max(0, start), Math.max(0, start) + L.window);
 }
-export function makeEnemy(floor, { boss = false, elite = false, dex = null } = {}) {
+export function enemyLevel(prog, add = 0) {
   const E = D.B.enemy;
-  const pool = spawnPool(floor, boss);
-  const W = D.B.spawn.rarityWeights;
-  const sp = dex ? mon(dex) : weighted(pool, (p) => (W[p.rarity] ?? 1) * (p.rarity === 'gewoehnlich' ? 1 : 1 + floor * D.B.spawn.rareGrowth));
-  const level = enemyLevel(floor, boss);
-  const k = E.statMult * Math.pow(E.growExp, floor - 1) * (elite ? E.eliteMult : 1) * (E.early[floor - 1] ?? 1);
-  const bm = boss ? E.boss : { hp: 1, atk: 1, def: 1 };
+  return Math.max(1, Math.round(E.levelBase + (prog - 1) * E.levelPerFight) + ri(0, 1) + add);
+}
+export function makeEnemy(prog, { kind = 'wild', elite = false, dex = null, sp = null, levelAdd = 0, mult = null } = {}) {
+  const E = D.B.enemy, W = D.B.spawn.rarityWeights;
+  if (!sp) {
+    const pool = kind === 'legend' ? legendPool(run.areal) : wildPool(run.areal, run.fight);
+    sp = dex ? mon(dex) : weighted(pool, (p) => (W[p.rarity] ?? 1) * (p.rarity === 'gewoehnlich' ? 1 : 1 + prog * D.B.spawn.rareGrowth) || 0.2);
+  }
+  const level = enemyLevel(prog, levelAdd + (kind === 'legend' ? E.legend.level : 0));
+  const bm = mult || (kind === 'legend' ? E.legend : { hp: 1, atk: 1, def: 1 });
+  const k = E.statMult * Math.pow(E.growExp, prog - 1) * (elite ? E.eliteMult : 1) * (E.early[prog - 1] ?? 1);
   const st = baseStats(sp.dex, level);
   const hp = Math.max(1, Math.round(st.hp * k * E.hpMult * bm.hp));
   return {
@@ -239,9 +266,9 @@ export function makeEnemy(floor, { boss = false, elite = false, dex = null } = {
     hp, max: hp,
     atk: Math.round(st.atk * k * bm.atk), def: Math.round(st.def * k * bm.def),
     spa: Math.round(st.spa * k * bm.atk), spd: Math.round(st.spd * k * bm.def),
-    spe: st.spe, move: sp.move, boss, elite,
+    spe: st.spe, move: sp.move, boss: kind === 'legend', trainer: kind === 'trainer', elite,
     st: {}, defDown: 0, buff: 0, guard: 0, anger: 0, flinch: false,
-    pattern: patternFor(sp, boss), pi: 0,
+    pattern: patternFor(sp, kind === 'legend'), pi: 0,
   };
 }
 function patternFor(sp, boss) {
@@ -252,20 +279,41 @@ function patternFor(sp, boss) {
   if (s > a) return ['spez', 'status', 'spez', 'buff'];
   return ['atk', 'strong', 'atk', 'status'];
 }
-export function makeFightEnemies(floor) {
-  const F = D.B.floor;
-  if (isBossFloor(floor)) return [makeEnemy(floor, { boss: true })];
+// Gegner des aktuellen Kampfes. Trainer: erstes Pokémon kämpft, der Rest wartet in reserve.
+export function makeFightEnemies() {
+  const F = D.B.floor, prog = run.floor, kind = fightKind();
+  if (kind === 'legend') return { enemies: [makeEnemy(prog, { kind })] };
+  if (kind === 'trainer') return makeTrainer(prog);
   let n = 1;
-  if (floor >= F.threeEnemiesFrom && rnd() < F.threeEnemiesChance) n = 3;
-  else if (floor >= F.twoEnemiesFrom && rnd() < F.twoEnemiesChance) n = 2;
+  const late = run.areal > 1 || run.fight >= F.twoEnemiesFrom;
+  if (late && run.areal >= F.threeEnemiesFromAreal && rnd() < F.threeEnemiesChance) n = 3;
+  else if (late && rnd() < F.twoEnemiesChance) n = 2;
   const elite = rnd() < F.eliteChance;
-  return Array.from({ length: n }, (_, i) => makeEnemy(floor, { elite: elite && i === 0 }));
+  return { enemies: Array.from({ length: n }, (_, i) => makeEnemy(prog, { elite: elite && i === 0 })) };
+}
+// Trainer-Endboss: Themen-Team eines Typs, Größe wächst mit dem Areal, das letzte Pokémon ist das stärkste
+export function makeTrainer(prog) {
+  const T = AR().trainer, list = D.trainers.trainers;
+  const fresh = list.filter((t) => !run.trainersSeen.includes(t.type));
+  const tr = pick(fresh.length ? fresh : list);
+  run.trainersSeen.push(tr.type);
+  const size = Math.min(6, T.baseSize + run.areal - 1);
+  const W = AR().wild;
+  const cap = W.bstStart + W.bstPerFight * AR().fights + W.bstPerAreal * (run.areal - 1) + T.bstBonus;
+  let pool = D.pokemon.filter((p) => !p.legendary && !p.mythical && !p.baby && p.types.includes(tr.type) && bst(p) <= cap).sort((x, y) => bst(y) - bst(x)).slice(0, 14);
+  if (pool.length < 3) pool = D.pokemon.filter((p) => !p.legendary && !p.mythical && p.types.includes(tr.type)).sort((x, y) => bst(x) - bst(y)).slice(0, 10);
+  const picks = [];
+  while (picks.length < size) { const c = pool.filter((p) => !picks.includes(p)); picks.push(pick(c.length ? c : pool)); }
+  picks.sort((x, y) => bst(x) - bst(y));
+  const team = picks.map((sp, i) => makeEnemy(prog, { kind: 'trainer', sp, levelAdd: T.levelAdd + (i === picks.length - 1 ? T.aceLevel : 0), mult: { hp: T.hp, atk: T.atk, def: T.def } }));
+  const sprite = tr.sprite || 1 + Math.floor(rnd() * 80);
+  return { enemies: [team[0]], reserve: team.slice(1), trainer: { ...tr, sprite, size } };
 }
 
 // --- Beute & Gold ----------------------------------------------------------------
 export function rollLoot(enemies) {
   const L = D.B.loot, ks = sumOps(keystoneOps(run));
-  const boss = enemies.some((e) => e.boss), elite = enemies.some((e) => e.elite);
+  const boss = enemies.some((e) => e.boss || e.trainer), elite = enemies.some((e) => e.elite);
   let n = boss ? L.bossDrops : elite ? L.eliteDrops : ri(...L.dropsPerFight) + (enemies.length > 1 ? 1 : 0);
   n += Math.round(g(ks, 'lootExtra'));
   const items = [];
@@ -277,8 +325,8 @@ export function rollLoot(enemies) {
 }
 export function fightGold(enemies) {
   const G = D.B.gold, { mods } = computeStats(run);
-  const boss = enemies.some((e) => e.boss);
-  const base = ri(...G.perFight) * (1 + run.floor * G.floorMult) * (boss ? G.bossMult : 1) * enemies.length ** 0.6;
+  const boss = enemies.some((e) => e.boss || e.trainer);
+  const base = ri(...G.perFight) * (1 + run.floor * G.floorMult) * (boss ? G.bossMult : 1) * Math.min(3, enemies.length) ** 0.6;
   return Math.round(base * (1 + g(mods, 'gold')));
 }
 
@@ -327,7 +375,8 @@ export function makeShop() {
   const ks = sumOps(keystoneOps(run)), S = D.B.shop;
   const n = S.slots + Math.round(g(ks, 'shopSlots'));
   const offers = Array.from({ length: n }, () => rollItem(run.floor + 1, { exclude: ['ball'] }));
-  for (const f of S.fixed) if ((f.minFloor || 0) <= run.floor) offers.push({ ...makeItem(f.id, run.floor), fixed: true });
+  const owns = (id) => [...run.inv, ...run.team.flatMap((m) => m.held)].some((it) => it?.id === id);
+  for (const f of S.fixed) if ((f.minFloor || 0) <= run.floor && !(f.once && owns(f.id))) offers.push({ ...makeItem(f.id, run.floor), fixed: true });
   run.shop = { offers, rerolls: 0 };
 }
 export const rerollCost = () => D.B.shop.reroll + D.B.shop.rerollStep * (run.shop?.rerolls || 0);

@@ -17,10 +17,10 @@ export { lead };
 export const alive = () => B().enemies.filter((e) => e.hp > 0);
 
 // --- Kampfstart ------------------------------------------------------------------
-export async function startBattle(enemies) {
+export async function startBattle(enemies, { reserve = [], trainer = null } = {}) {
   ensureLeadAble();
   const { stats, mods } = computeStats(run);
-  run.battle = { enemies, turn: 1, energy: D.B.energy.start + Math.round(g(mods, 'energyStart')), buffs: [], stacks: {}, shield: 0, pst: {}, sashUsed: 0, extra: Math.round(g(mods, 'extraTurn')), target: 0, caught: [], log: [], quickUsed: false };
+  run.battle = { enemies, turn: 1, energy: D.B.energy.start + Math.round(g(mods, 'energyStart')), buffs: [], stacks: {}, shield: 0, pst: {}, sashUsed: 0, extra: Math.round(g(mods, 'extraTurn')), target: 0, caught: [], log: [], quickUsed: false, reserve, trainer };
   const b = B();
   run.team.forEach(fixHp);
   await fx({ kind: 'start' });
@@ -68,7 +68,10 @@ async function strike(e, move, { stats, mods, label, secondary = false, statusBo
   if (g(mods, 'defShred') > 0) e.defDown = Math.min(0.6, e.defDown + g(mods, 'defShred'));
   if (g(mods, 'flinch') > 0 && rnd() < g(mods, 'flinch')) e.flinch = true;
   if (!secondary) {
-    if (g(mods, 'chain') > 0) for (const o of alive().filter((x) => x !== e)) await chainHit(o, Math.round(dmg * g(mods, 'chain')), move.type);
+    if (g(mods, 'chain') > 0 && alive().some((x) => x !== e)) {
+      await fx({ kind: 'aoe', type: move.type });
+      for (const o of alive().filter((x) => x !== e)) await chainHit(o, Math.round(dmg * g(mods, 'chain')), move.type);
+    }
     if (e.st.burn && g(mods, 'burnSpread')) for (const o of alive().filter((x) => x !== e && !x.st.burn)) await inflict(o, 'burn', mods, true);
     if (g(mods, 'lifesteal') > 0) await heal(dmg * g(mods, 'lifesteal'), mods, 'Lebensraub');
     if (g(mods, 'recoil') > 0) await hurtPlayer(Math.round(dmg * g(mods, 'recoil')), 'Rückstoß');
@@ -170,10 +173,11 @@ export async function act(action, arg = {}) {
   if (!b || b.busy) return;
   b.busy = true;
   try {
-    if (await playerBlocked()) { await endPlayerAction(); return; }
+    if (await playerBlocked()) { await endPlayerAction(); await nextTrainerMon(); return; }
     const done = await doAction(action, arg);
     if (done === false) return;
     await endPlayerAction();
+    await nextTrainerMon();
   } finally {
     if (run.battle) run.battle.busy = false;
     save();
@@ -222,6 +226,16 @@ async function doAction(action, arg) {
   return true;
 }
 
+// Trainer schickt sein nächstes Pokémon, sobald keins mehr steht
+async function nextTrainerMon() {
+  const b = B();
+  if (alive().length || !b.reserve?.length || battleLost()) return;
+  const e = b.reserve.shift();
+  b.enemies.push(e);
+  b.targetUid = e.uid;
+  await fx({ kind: 'sendout', e });
+}
+
 // Item verbrauchen
 export function useEffect(inst) {
   const def = itemDef(inst.id);
@@ -255,6 +269,7 @@ export async function applyUse(inst, u, stats, mods) {
   if (u.attack && alive().length) {
     const a = u.attack, move = { name: a.name, type: a.type, cat: 'spez', power: a.power * boost };
     await fx({ kind: 'pattack', move, special: true });
+    if (a.all) await fx({ kind: 'aoe', type: a.type });
     for (const e of a.all ? alive() : [target()]) await strike(e, move, { stats, mods, label: a.name, statusBonus: a.status, secondary: a.all });
   }
 }
@@ -269,6 +284,7 @@ async function typeBurst(type, power, stats, mods, label) {
     const bu = syn.burst;
     await fx({ kind: 'synergy', syn });
     const m2 = { name: syn.name, type: bu.type, cat: 'spez', power: bu.power * (1 + st * 0.05) };
+    if (bu.all) await fx({ kind: 'aoe', type: bu.type });
     for (const e of bu.all ? alive() : [target()]) await strike(e, m2, { stats, mods, label: syn.name, statusBonus: bu.status, secondary: true });
     if (bu.heal) await heal(stats.hp * bu.heal, mods, syn.name);
     if (bu.shield) { B().shield += Math.round(stats.hp * bu.shield); await fx({ kind: 'shield', v: B().shield }); }
@@ -317,7 +333,7 @@ export function catchChance(e, inst, mods = P().mods) {
   let ball = cb.mult;
   if (cb.types && e.types.some((t) => cb.types.includes(t))) ball *= cb.bonus;
   if (cb.fast && mon(e.dex).base[5] >= cb.fast) ball *= cb.bonus;
-  if (cb.nest) ball *= clamp(K.nestMax - run.floor * 0.15, 1, K.nestMax);
+  if (cb.nest) ball *= clamp(K.nestMax - run.floor * 0.06, 1, K.nestMax);
   if (cb.timer) ball *= Math.min(K.timerMax, 1 + (b.turn - 1) * K.timerPerTurn);
   if (cb.quick && b.turn === 1) ball *= K.quickTurn1;
   let st = 1;
@@ -333,6 +349,7 @@ async function throwBall(idx, stats, mods) {
   const inst = run.inv[idx];
   if (!inst || itemDef(inst.id).kind !== 'ball') return false;
   const e = target();
+  if (e.trainer) { await fx({ kind: 'say', text: 'Trainer-Pokémon kann man nicht fangen!' }); return false; }
   const p = catchChance(e, inst, mods);
   takeOne(idx);
   // 4 Schüttelproben wie im Original (Wahrscheinlichkeit je Probe = p^(1/4))
@@ -386,7 +403,7 @@ function enemyDmg(e, it, stats, mods) {
   const eff = spec ? typeEff(type, mon(lead().dex).types) : 1;
   const stab = spec && e.types.includes(type) ? c.stab : 1;
   const burn = e.st.burn && !spec ? 0.75 : 1;
-  const dmg = (((2 * e.level) / 5 + 2) * c.basePower * mult * A / Math.max(1, Dp) / 50 + 2) * eff * stab * burn * (1 + g(mods, 'dmgTaken'));
+  const dmg = (((2 * e.level) / 5 + 2) * c.basePower * mult * A / Math.max(1, Dp) / 50 + 2) * eff * stab * burn * c.enemyDmg * (1 + g(mods, 'dmgTaken'));
   return { dmg: Math.max(eff === 0 ? 0 : 1, Math.round(dmg)), eff, type };
 }
 async function enemyTurn(e) {
@@ -453,5 +470,5 @@ async function roundEnd() {
   b.turn++;
 }
 
-export const battleWon = () => B() && !alive().length;
+export const battleWon = () => B() && !alive().length && !B().reserve?.length;
 export const battleLost = () => run.team.every((m) => m.fainted);

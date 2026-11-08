@@ -44,7 +44,8 @@
     ],
     "confuseSelfHit": 0.33,
     "statusDmgMult": 1,
-    "basePower": 50
+    "basePower": 50,
+    "enemyDmg": 0.7
   },
   "sacrifice": {
     "floorAllPct": 0.35,
@@ -53,26 +54,20 @@
     "healPct": 0.5
   },
   "floor": {
-    "fights": [
-      1,
-      3
-    ],
-    "twoEnemiesFrom": 5,
-    "twoEnemiesChance": 0.35,
-    "threeEnemiesFrom": 15,
-    "threeEnemiesChance": 0.2,
-    "bossEvery": 10,
-    "eliteChance": 0.12,
+    "twoEnemiesFrom": 9,
+    "twoEnemiesChance": 0.2,
+    "threeEnemiesFromAreal": 2,
+    "threeEnemiesChance": 0.15,
+    "eliteChance": 0.1,
     "healAfterFloor": 1,
     "healAfterFight": 0.3
   },
   "enemy": {
-    "_hinweis": "Gegner-Level = levelBase + (Floor-1)·levelPerFloor (+0–1). Werte nach Pokémon-Formel × growExp^(Floor-1) × early/elite/boss.",
+    "_hinweis": "Gegner-Level = levelBase + (Kampf insgesamt-1)·levelPerFight (+0–1). Werte nach Pokémon-Formel × growExp^(Kampf-1) × early/elite/legend.",
     "levelBase": 1,
-    "levelPerFloor": 1.5,
     "statMult": 1,
-    "hpMult": 1.2,
-    "growExp": 1.05,
+    "hpMult": 1,
+    "growExp": 1.02,
     "eliteMult": 1.4,
     "early": [
       0.75,
@@ -80,31 +75,17 @@
       0.9,
       0.95
     ],
-    "boss": {
-      "hp": 3,
-      "atk": 1.25,
-      "def": 1.2,
-      "level": 3
-    },
-    "stageByFloor": [
-      [
-        1,
-        1
-      ],
-      [
-        6,
-        2
-      ],
-      [
-        16,
-        3
-      ]
-    ],
-    "legendaryBossFrom": 20,
-    "angerAtk": 0.25
+    "angerAtk": 0.25,
+    "levelPerFight": 0.75,
+    "legend": {
+      "hp": 1.4,
+      "atk": 1,
+      "def": 1,
+      "level": 1
+    }
   },
   "rarityByFloor": {
-    "_hinweis": "Gewichte für Item-Seltenheit 1–5, linear interpoliert zwischen den Floors",
+    "_hinweis": "Gewichte für Item-Seltenheit 1–5 nach Kampf insgesamt, linear interpoliert",
     "points": [
       [
         1,
@@ -117,7 +98,7 @@
         ]
       ],
       [
-        10,
+        25,
         [
           40,
           35,
@@ -127,7 +108,7 @@
         ]
       ],
       [
-        25,
+        60,
         [
           20,
           30,
@@ -137,7 +118,7 @@
         ]
       ],
       [
-        50,
+        120,
         [
           10,
           20,
@@ -171,7 +152,7 @@
     }
   ],
   "itemLevel": {
-    "everyFloors": 2,
+    "everyFloors": 4,
     "scale": 0.22,
     "jitter": 1
   },
@@ -190,8 +171,8 @@
       6,
       11
     ],
-    "floorMult": 0.1,
-    "bossMult": 4
+    "floorMult": 0.04,
+    "bossMult": 3
   },
   "shop": {
     "slots": 6,
@@ -204,7 +185,7 @@
       70,
       120
     ],
-    "priceFloorMult": 0.05,
+    "priceFloorMult": 0.02,
     "sellPct": 0.4,
     "fixed": [
       {
@@ -223,6 +204,12 @@
         "id": "hyperball",
         "price": 35,
         "minFloor": 8
+      },
+      {
+        "id": "ep-teiler",
+        "price": 45,
+        "minFloor": 3,
+        "once": true
       }
     ]
   },
@@ -237,7 +224,6 @@
     "levelScale": 0.15,
     "statScale": 0.5
   },
-  "keystoneEvery": 5,
   "catch": {
     "status": {
       "sleep": 2.5,
@@ -288,18 +274,19 @@
       "sehr_selten": 1.2,
       "legendaer": 0
     },
-    "rareGrowth": 0.04
+    "rareGrowth": 0.015
   },
   "heldSlots": 4,
   "ivs": 15,
   "exp": {
     "share": 0.5,
     "mult": 1,
-    "_hinweis": "share = Anteil für Pokémon, die nicht gekämpft haben (EP-Teiler)"
+    "_hinweis": "share = EP-Anteil für Pokémon, die nicht gekämpft haben – nur mit dem Item EP-Teiler (shareItem).",
+    "shareItem": "ep-teiler"
   },
   "startTeam": 3,
   "backgrounds": {
-    "_hinweis": "Kampf-Hintergründe (public/art/bg/<id>.png): jeder Floor zieht den nächsten aus einer pro Lauf gemischten Liste, Boss-Floors aus boss.",
+    "_hinweis": "Kampf-Hintergründe (public/art/bg/<id>.png): wechseln mit jedem Abschnitt zwischen zwei Rasten (Reihenfolge pro Lauf gemischt), Legendäre und Trainer aus boss.",
     "normal": [
       "D05P11A",
       "D06P11A",
@@ -321,5 +308,62 @@
       "D26P43A"
     ],
     "dim": 0.3
+  },
+  "areal": {
+    "_hinweis": "Ein Areal = fights Kämpfe: wild bis trainerAt-1, Kampf trainerAt = Trainer-Endboss, legendAt = Legendäres. Rast (Heilung, Shop) nach restAfter und am Areal-Ende (dann auch Keystone). wild: Basiswert-Summe der wilden Pokémon steigt je Kampf/Areal; die ersten routeFights Kämpfe im 1. Areal kommen aus route (Nager, kleine Vögel, Käfer).",
+    "fights": 15,
+    "restAfter": [
+      5,
+      10,
+      13
+    ],
+    "trainerAt": 14,
+    "legendAt": 15,
+    "wild": {
+      "bstStart": 250,
+      "bstPerFight": 10,
+      "bstPerAreal": 70,
+      "bstWindow": 150,
+      "routeFights": 4,
+      "route": [
+        19,
+        161,
+        263,
+        399,
+        504,
+        659,
+        819,
+        915,
+        16,
+        21,
+        165,
+        167,
+        10,
+        13,
+        265,
+        396,
+        519,
+        731,
+        821,
+        52,
+        41,
+        734,
+        661,
+        506
+      ]
+    },
+    "trainer": {
+      "baseSize": 2,
+      "levelAdd": 0,
+      "aceLevel": 2,
+      "hp": 1,
+      "atk": 1,
+      "def": 1,
+      "bstBonus": 40
+    },
+    "legend": {
+      "window": 12,
+      "step": 8
+    }
   }
 }

@@ -68,7 +68,8 @@ export function itemSheet(idx) {
   if (run.phase === 'battle' && b) {
     if (def.kind === 'ball') {
       const e = alive().find((x) => x.uid === b.targetUid) || alive()[0];
-      if (e) {
+      if (e?.trainer) btns.push(h('button.btn', { disabled: true }, 'Nicht fangbar', h('small', 'gehört einem Trainer')));
+      else if (e) {
         const p = catchChance(e, inst);
         btns.push(h('button.btn.pri', { onclick: () => { closeSheet(); G.act('ball', { idx }); } }, `Werfen auf ${e.name}`, h('small', `Fangchance ${p >= 1 ? '100' : (p * 100).toFixed(p < 0.1 ? 1 : 0)} %`)));
       }

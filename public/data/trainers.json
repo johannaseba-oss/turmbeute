@@ -1,0 +1,23 @@
+{
+  "_hinweis": "Trainer-Endbosse (Kampf 14 jedes Areals). Jeder hat ein Themen-Team eines Typs. Teamgröße = min(6, 1 + Areal). sprite = public/art/trainers/<n>.png (4×4-Sheet, Zeile 2 = Blick nach links); fehlt sprite, wird zufällig gewählt.",
+  "trainers": [
+    { "type": "Feuer", "title": "Glutmeisterin", "name": "Rhea" },
+    { "type": "Wasser", "title": "Gezeitenhüter", "name": "Kalle" },
+    { "type": "Pflanze", "title": "Gärtnerin", "name": "Mira" },
+    { "type": "Elektro", "title": "Funkenschmied", "name": "Jonte" },
+    { "type": "Psycho", "title": "Seherin", "name": "Ilka" },
+    { "type": "Kampf", "title": "Faustmeister", "name": "Tarek" },
+    { "type": "Geist", "title": "Spukwächterin", "name": "Vesna" },
+    { "type": "Drache", "title": "Drachenreiter", "name": "Odo" },
+    { "type": "Normal", "title": "Allrounderin", "name": "Lenja" },
+    { "type": "Gift", "title": "Giftmischer", "name": "Fritz" },
+    { "type": "Eis", "title": "Frostherrin", "name": "Selma" },
+    { "type": "Boden", "title": "Erdgräber", "name": "Henrik" },
+    { "type": "Flug", "title": "Himmelsläuferin", "name": "Nele" },
+    { "type": "Käfer", "title": "Schwarmhüter", "name": "Bodo" },
+    { "type": "Gestein", "title": "Felsenbrecherin", "name": "Ylva" },
+    { "type": "Unlicht", "title": "Schattenfürst", "name": "Rasmus" },
+    { "type": "Stahl", "title": "Eisenwächterin", "name": "Ida" },
+    { "type": "Fee", "title": "Feenmagier", "name": "Kasimir" }
+  ]
+}

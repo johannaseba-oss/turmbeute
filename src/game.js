@@ -29,7 +29,8 @@ const effText = (eff) => (eff >= 2 ? 'sehr effektiv!' : eff === 0 ? 'keine Wirku
 async function fx(ev) {
   const W = (ms) => stage.wait(ms);
   switch (ev.kind) {
-    case 'start': stage.setScene(run.team[0].dex, run.battle.enemies); refreshIntents(); renderHud(); return;
+    case 'start': stage.trainer = run.battle.trainer?.sprite || null; stage.setScene(run.team[0].dex, standing()); refreshIntents(); renderHud(); return;
+    case 'sendout': { const t = run.battle.trainer; stage.setScene(run.team[0].dex, standing()); refreshIntents(); renderHud(); await banner(`${t.name} schickt ${ev.e.name}!`, `noch ${run.battle.reserve.length} im Team`, 800); return; }
     case 'pattack': stage.lunge('player'); log(ev.move.name + (ev.special ? '!' : '')); if (ev.special) stage.vfx('player', 'level_up_burst', 0.7, 12); blip(ev.special ? 520 : 330, 0.06); return W(200);
     case 'eattack': { stage.lunge(ev.e.uid); log(`${ev.e.name}: ${{ atk: 'Angriff', strong: 'Wuchtschlag', spez: ev.e.move.name, status: ev.e.move.name }[ev.it] || ''}`); blip(180, 0.08); return W(220); }
     case 'hit': {
@@ -58,6 +59,7 @@ async function fx(ev) {
       renderHud();
       return W(ev.small ? 150 : 320);
     }
+    case 'aoe': stage.aoe(ev.type); blip(60, 0.25, 'sawtooth', 0.07); navigator.vibrate?.(30); return stage.wait(320);
     case 'miss': stage.text('player', 'Ausgewichen!', '#8ac8ff', 13); return W(260);
     case 'shield': stage.text('player', '🛡 ' + ev.v, '#8ac8ff', 14); renderHud(); return W(200);
     case 'shieldhit': stage.text('player', '🛡-' + ev.v, '#8ac8ff', 12, 50); return W(100);
@@ -78,11 +80,13 @@ async function fx(ev) {
     case 'ball': sfx('ballfall', 0.5); log(itemDef(ev.inst.id).name + '!'); await stage.throwBall(ev.inst.id, ev.e.uid, ev.shakes, ev.ok); return;
     case 'caught': sfx('fp_rang', 0.6); await banner(`${ev.e.name} gefangen!`, ev.full ? 'Team voll – entscheide nach dem Kampf' : 'Neu im Team', 1100); renderHud(); return;
     case 'faint': sfx('fp_fehler', 0.4); await stage.ko('player'); log(`${mon(ev.m.dex).name} ist besiegt!`); await stage.wait(400); return;
-    case 'swap': stage.setScene(run.team[0].dex, run.battle.enemies); renderHud(); return W(250);
+    case 'swap': stage.setScene(run.team[0].dex, standing()); renderHud(); return W(250);
     case 'say': log(ev.text); return W(380);
-    case 'update': stage.setScene(run.team[0].dex, run.battle?.enemies || []); refreshIntents(); renderHud(); return;
+    case 'update': stage.setScene(run.team[0].dex, standing()); refreshIntents(); renderHud(); return;
   }
 }
+// Auf der Bühne nur stehende Gegner (K.O.-Animation läuft vorher)
+const standing = () => (run.battle?.enemies || []).filter((e) => e.hp > 0);
 function refreshIntents() {
   const b = run.battle;
   if (!b) return;
@@ -113,10 +117,10 @@ export const G = {
       h('div.title', 'TURMBEUTE'),
       h('div.subtitle', 'Erklimme den endlosen Turm. Fange, sammle, zerlege – und bau dir den absurdesten Build.'),
       h('div.menu',
-        saved && saved.v === 2 && saved.phase !== 'over' ? h('button.btn.pri', { onclick: () => G.resume(saved) }, `Fortsetzen`, h('small', `Floor ${saved.floor} · ${mon(saved.team[0].dex).name}`)) : null,
+        saved && saved.v === 3 && saved.phase !== 'over' ? h('button.btn.pri', { onclick: () => G.resume(saved) }, `Fortsetzen`, h('small', `Areal ${saved.areal} · Kampf ${saved.fight} · ${mon(saved.team[0].dex).name}`)) : null,
         h('button.btn.gold', { onclick: () => starterScreen((dexes) => G.newRun(dexes)) }, 'Neuer Lauf'),
         h('button.btn', { onclick: (e) => { const on = toggleSound(); e.currentTarget.textContent = on ? 'Ton: an' : 'Ton: aus'; } }, soundOn() ? 'Ton: an' : 'Ton: aus'),
-        meta.best ? h('div.hint', { style: { textAlign: 'center' } }, `Rekord: Floor ${meta.best} · ${meta.runs} Läufe`) : null));
+        meta.best ? h('div.hint', { style: { textAlign: 'center' } }, `Rekord: ${progText(meta.best)} · ${meta.runs} Läufe`) : null));
   },
   newRun(dexes) {
     R.newRun(dexes);
@@ -133,7 +137,8 @@ export const G = {
       run.battle.busy = false;
       setMusic('zeitturm.mp3');
       stage.setBackground(floorBg());
-      stage.setScene(run.team[0].dex, run.battle.enemies);
+      stage.trainer = run.battle.trainer?.sprite || null;
+      stage.setScene(run.team[0].dex, standing());
       refreshIntents();
       G.refresh();
     } else if (run.phase === 'battle' || run.phase === 'floor') G.nextFight(true);
@@ -143,19 +148,21 @@ export const G = {
 
   async nextFight(same = false) {
     const me = run;
+    if (!same) R.advanceFight();
     stage.setBackground(floorBg());
-    if (!same) run.fight++;
     run.phase = 'battle';
-    const enemies = R.makeFightEnemies(run.floor);
+    const fight = R.makeFightEnemies();
     renderPanel();
+    stage.trainer = null;
     stage.setScene(run.team[0].dex, []);
     renderHud();
-    const boss = enemies.some((e) => e.boss);
-    if (run.fight === 1) await banner(`Floor ${run.floor}`, boss ? '★ Boss-Floor ★' : `${run.fights} ${run.fights === 1 ? 'Kampf' : 'Kämpfe'}`, 1000);
-    else await banner(`Kampf ${run.fight}/${run.fights}`, '', 600);
-    if (boss) await banner(enemies[0].name, 'Boss', 900);
+    const kind = R.fightKind(), N = D.B.areal.fights;
+    if (run.fight === 1) await banner(`Areal ${run.areal}`, `${N} Kämpfe · am Ende ein Trainer und ein Legendäres`, 1100);
+    if (kind === 'trainer') { const t = fight.trainer; stage.trainer = t.sprite; await banner(`${t.title} ${t.name}`, `Endboss · ${t.size} ${t.type}-Pokémon`, 1300); }
+    else if (kind === 'legend') await banner('Legendäres Pokémon!', fight.enemies[0].name, 1200);
+    else if (run.fight > 1) await banner(`Kampf ${run.fight}/${N}`, '', 550);
     if (run !== me) return; // inzwischen neuer Lauf
-    await K.startBattle(enemies);
+    await K.startBattle(fight.enemies, fight);
     G.refresh();
   },
   pickTarget(ev) {
@@ -188,7 +195,8 @@ export const G = {
       if (rnd() < 0.5) mons.push({ ...R.makeMon(e.dex, e.level), offer: true });
       else items.push(R.makeItem('master-fragment', run.floor));
     }
-    const boss = defeated.some((e) => e.boss);
+    const boss = defeated.some((e) => e.boss || e.trainer);
+    if (b.trainer && !R.ownsItem(D.B.exp.shareItem)) items.unshift(R.makeItem(D.B.exp.shareItem, run.floor));
     const { mods } = computeStats(run);
     run.battle = null;
     giveFightExp(defeated);
@@ -197,7 +205,7 @@ export const G = {
     run.phase = 'loot';
     sfx('muenze', 0.5);
     const me = run;
-    await banner(boss ? 'Boss besiegt!' : 'Sieg!', `+${gold} Gold`, 700);
+    await banner(b.trainer ? `${b.trainer.name} besiegt!` : boss ? 'Legendäres besiegt!' : 'Sieg!', `+${gold} Gold`, 700);
     if (run === me) G.refresh();
   },
   takeLoot(i) {
@@ -244,12 +252,11 @@ export const G = {
     if (run.phase === 'loot') {
       if (run.loot.mons.length) return G.toastNo('Entscheide erst über die Pokémon.');
       run.loot = null;
-      if (run.fight < run.fights) return G.nextFight();
+      if (!R.isRestAfter(run.fight)) return G.nextFight();
       return G.floorEnd();
     }
     if (run.phase === 'rest') {
-      run.floor++;
-      R.startFloor();
+      R.startSegment();
       run.shop = null;
       setMusic('zeitturm.mp3');
       return G.nextFight();
@@ -259,7 +266,7 @@ export const G = {
     run.floorOps = []; run.floorStacks = {};
     R.healTeam(D.B.floor.healAfterFloor, true);
     R.makeShop();
-    const ks = run.floor % D.B.keystoneEvery === 0 || R.isBossFloor(run.floor);
+    const ks = run.fight >= D.B.areal.fights; // Areal geschafft
     run.phase = ks ? 'keystone' : 'rest';
     if (ks) run.ksOffer = R.keystoneOffer();
     setMusic('gilde.mp3');
@@ -325,7 +332,7 @@ export const G = {
     const { fixed, sold, ...inst } = o;
     if (!R.addItem({ ...inst, uid: Math.random().toString(36).slice(2) })) return G.toastNo('Inventar voll.');
     run.gold -= p;
-    if (!fixed) o.sold = true;
+    if (!fixed || D.B.shop.fixed.find((f) => f.id === o.id)?.once) o.sold = true;
     sfx('muenze', 0.5);
     G.processEvents();
     G.refresh();
@@ -351,7 +358,7 @@ export const G = {
   },
   gameOver() {
     const meta = R.loadMeta();
-    const best = Math.max(meta.best, run.floor);
+    const best = Math.max(meta.best || 0, run.floor);
     meta.best = best; R.saveMeta(meta);
     run.phase = 'over';
     R.clearSave();
@@ -359,7 +366,7 @@ export const G = {
     const ov = $('#overlay');
     ov.classList.remove('hidden');
     ov.replaceChildren(h('div.title', { style: { fontSize: '38px' } }, 'BESIEGT'),
-      h('div.subtitle', `Floor ${run.floor} erreicht${run.floor >= best ? ' – neuer Rekord!' : ` · Rekord ${best}`}`),
+      h('div.subtitle', `${progText(run.floor)} erreicht${run.floor >= best ? ' – neuer Rekord!' : ` · Rekord ${progText(best)}`}`),
       h('div', { style: { display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap', justifyContent: 'center' } }, run.team.map((m) => h('img', { src: portraitUrl(m.dex), style: { width: '48px', imageRendering: 'pixelated', borderRadius: '6px' } }))),
       h('div.hint', `Besiegt ${run.stats.kills} · Gefangen ${run.stats.caught} · Zerlegt ${run.stats.salvaged} · Keystones ${run.keystones.length}`),
       h('div.menu', { style: { marginTop: '16px' } }, h('button.btn.gold', { onclick: () => starterScreen((dexes) => G.newRun(dexes)) }, 'Neuer Lauf'), h('button.btn', { onclick: () => G.title() }, 'Titel')));
@@ -376,16 +383,19 @@ export const G = {
 // Hintergrund-Sprite für den aktuellen Floor (Reihenfolge pro Lauf gemischt, Boss-Floors eigene)
 function floorBg() {
   const Bg = D.B.backgrounds;
-  if (R.isBossFloor(run.floor)) return Bg.boss[(run.floor / D.B.floor.bossEvery - 1) % Bg.boss.length];
+  if (R.fightKind() !== 'wild') return Bg.boss[(run.areal - 1) % Bg.boss.length];
   if (!run.bgOrder) run.bgOrder = [...Bg.normal].sort(() => rnd() - 0.5);
-  return run.bgOrder[(run.floor - 1) % run.bgOrder.length];
+  const seg = D.B.areal.restAfter.filter((f) => run.fight > f).length;
+  return run.bgOrder[((run.areal - 1) * (D.B.areal.restAfter.length + 1) + seg) % run.bgOrder.length];
 }
-// EP: Kämpfer bekommt alles, die anderen (nicht besiegten) den EP-Teiler-Anteil
+// EP: Kämpfer bekommt alles; die anderen (nicht besiegten) nur mit EP-Teiler einen Anteil
 function giveFightExp(defeated) {
   const X = D.B.exp, fighter = run.team[0];
+  const hasShare = [...run.inv, ...run.team.flatMap((m) => m.held)].some((it) => it?.id === X.shareItem);
   for (const m of run.team) {
     if (m.fainted) continue;
-    const share = m === fighter ? 1 : X.share;
+    const share = m === fighter ? 1 : hasShare ? X.share : 0;
+    if (!share) continue;
     const mult = X.mult * (1 + g(computeStats(run, [], m).mods, 'expMult'));
     const xp = defeated.reduce((s, e) => s + expGain(e, m), 0) * share * mult;
     R.giveExp(m, xp);
@@ -399,11 +409,13 @@ function replacePicker(idx, mi) {
     h('button.btn', { onclick: closeSheet }, 'Abbrechen')));
 }
 
+const progText = (p) => { const N = D.B.areal.fights; return `Areal ${Math.floor((p - 1) / N) + 1}, Kampf ${((p - 1) % N) + 1}`; };
+
 function help() {
   openSheet(h('h3', 'So funktioniert’s'), h('ul.fx',
-    h('li', 'Jeder Floor hat 1–3 Kämpfe, alle 10 Floors einen Boss. Danach Rast mit Shop.'),
+    h('li', 'Ein Areal hat 15 Kämpfe: erst wilde Pokémon (am Anfang Nager & Co., dann stärkere), Kampf 14 ein Trainer-Endboss mit Themen-Team, Kampf 15 ein Legendäres. Rast mit Heilung und Shop nach Kampf 5, 10 und 13, am Areal-Ende ein Keystone.'),
     h('li', 'Du startest mit 3 Pokémon auf Lv 1. Der Anführer (♛) kämpft mit seinen eigenen Werten und seinen bis zu 4 Items. Wird er besiegt, kommt das nächste. Alle geben Typ-Stacks und ihre Fähigkeit fürs Team.'),
-    h('li', 'Besiegte Gegner geben EP: der Kämpfer alle, die anderen die Hälfte. Level ohne Obergrenze, Entwicklungen wie im Original. In der Rast werden alle geheilt und wiederbelebt.'),
+    h('li', 'Besiegte Gegner geben EP an den Kämpfer. Mit dem EP-Teiler (Shop oder erster Trainer-Sieg) bekommen die anderen die Hälfte. Level ohne Obergrenze, Entwicklungen wie im Original. In der Rast werden alle geheilt und wiederbelebt.'),
     h('li', 'Im Kampf: Angriff, Spezial (kostet Energie), Warten, ein Item verbrauchen, einen Ball werfen oder ein Pokémon einsetzen/opfern (Pokémon antippen).'),
     h('li', 'Fangen: je weniger KP und mit Status (Schlaf, Paralyse, Gift, Verbrennung), desto besser. Fehlwurf macht den Gegner wütend.'),
     h('li', 'Items: anlegen (an Pokémon oder Trainer-Plätze), im Kampf verbrauchen oder zerlegen für permanente Werte und Typ-Affinität. Ziehen & Ablegen geht auch.'),
@@ -490,7 +502,7 @@ function keystonePanel() {
 }
 function restPanel() {
   const S = run.shop;
-  return [h('div.ph', `Rast · Floor ${run.floor}`, h('small', 'Team geheilt')),
+  return [h('div.ph', `Rast · Areal ${run.areal}, nach Kampf ${run.fight}`, h('small', 'Team geheilt')),
     h('div.cards', S.offers.map((o, i) => { const p = R.itemPrice(o), can = run.gold >= p; return itemCard(o, h('div.pr', { class: 'pr ' + (can ? 'ok' : 'no') }, o.sold ? 'verkauft' : p + ' G'), () => shopSheet(i), can ? 'ok' : 'no'); })),
     h('div.rowbtns', h('button.btn.purple', { class: 'btn purple ' + (run.gold >= R.rerollCost() ? 'ok' : 'no'), onclick: () => G.reroll() }, `Neu würfeln`, h('small', R.rerollCost() + ' Gold'))),
     h('div.hint', 'Grün = kannst du dir leisten, rot = zu teuer. Inventar-Items antippen: Anlegen, Zerlegen oder Verkaufen.')];

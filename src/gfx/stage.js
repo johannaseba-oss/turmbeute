@@ -64,7 +64,8 @@ export class Stage {
     const ys = n === 1 ? [0.8] : n === 2 ? [0.74, 0.84] : [0.72, 0.84, 0.74];
     return { x: W * (xs[i] ?? 0.7), y: H * (ys[i] ?? 0.8) };
   }
-  scale() { return Math.max(2, Math.floor(this.c.height / 75)); }
+  // Pixel-Skalierung der Sprites (klein genug, dass Flächen-Effekte Platz haben)
+  scale() { return Math.max(2, Math.round(this.c.height / 135)); }
 
   frame(dex, anim, dir, ms) {
     const sp = mon(dex), a = sp.anims[anim] || sp.anims.Idle;
@@ -152,7 +153,7 @@ export class Stage {
     const order = [...this.actors.entries()].sort((a, b) => this.pos(a[0]).y - this.pos(b[0]).y);
     for (const [uid, a] of order) {
       const p = this.pos(uid), e = this.enemies?.find((q) => q.uid === uid);
-      const big = e?.boss ? 1.5 : 1;
+      const big = e?.boss ? 1.35 : 1;
       const ss = Math.round(s * big);
       x.globalAlpha = a.alpha * 0.5;
       x.fillStyle = '#000';
@@ -176,6 +177,11 @@ export class Stage {
         }
       }
       x.globalAlpha = 1;
+    }
+    // Trainer hinter seinen Pokémon
+    if (this.trainer) {
+      const ti = img(artUrl(`trainers/${this.trainer}.png`));
+      if (ok(ti)) { const fw = ti.naturalWidth / 4, fh = ti.naturalHeight / 4, k = s * 0.5; x.drawImage(ti, 0, fh, fw, fh, W * 0.92 - (fw * k) / 2, H * 0.66 - fh * k, fw * k, fh * k); }
     }
     // Gegner-Leisten
     for (const e of this.enemies || []) this.drawEnemyBar(e);
@@ -280,6 +286,15 @@ export class Stage {
   }
 
   // --- Effekt-Helfer ----------------------------------------------------------
+  // Flächenangriff: großer Effekt über allen Gegnern
+  aoe(type) {
+    const list = (this.enemies || []).filter((e) => e.hp > 0);
+    if (!list.length) return;
+    const ps = list.map((e) => this.pos(e.uid)), cx = ps.reduce((a, p) => a + p.x, 0) / ps.length, cy = ps.reduce((a, p) => a + p.y, 0) / ps.length;
+    const key = VFX_TYPE[type] || 'magic_missile_hit';
+    this.fx.push({ key, x: cx, y: cy - 10 * this.scale(), t0: this.t, size: 2.2 + list.length * 0.6, add: true });
+    this.fx.push({ key: 'ground_slam', x: cx, y: cy, t0: this.t, size: 2 + list.length * 0.5, add: true });
+  }
   hitAt(uid, type, size = 1.3) {
     const p = this.pos(uid), a = this.actors.get(uid);
     const key = VFX_TYPE[type] || 'magic_missile_hit';
