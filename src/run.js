@@ -295,12 +295,15 @@ export function enemyLevel(prog, add = 0) {
   const E = D.B.enemy;
   return Math.max(1, Math.round(E.levelBase + (prog - 1) * E.levelPerFight) + ri(0, 1) + add);
 }
+// Art für einen Gegner ziehen (Gewichtung nach Seltenheit)
+export function rollSpecies(prog, kind = 'wild') {
+  const W = D.B.spawn.rarityWeights;
+  const pool = kind === 'legend' ? legendPool(run.areal) : wildPool(run.areal, run.fight);
+  return weighted(pool, (p) => (W[p.rarity] ?? 1) * (p.rarity === 'gewoehnlich' ? 1 : 1 + prog * D.B.spawn.rareGrowth) || 0.2);
+}
 export function makeEnemy(prog, { kind = 'wild', elite = false, dex = null, sp = null, levelAdd = 0, mult = null, group = 1 } = {}) {
   const E = D.B.enemy, W = D.B.spawn.rarityWeights;
-  if (!sp) {
-    const pool = kind === 'legend' ? legendPool(run.areal) : wildPool(run.areal, run.fight);
-    sp = dex ? mon(dex) : weighted(pool, (p) => (W[p.rarity] ?? 1) * (p.rarity === 'gewoehnlich' ? 1 : 1 + prog * D.B.spawn.rareGrowth) || 0.2);
-  }
+  if (!sp) sp = dex ? mon(dex) : rollSpecies(prog, kind);
   const level = enemyLevel(prog, levelAdd + (kind === 'legend' ? E.legend.level : 0));
   const bm = mult || (kind === 'legend' ? E.legend : { hp: 1, atk: 1, def: 1 });
   const k = E.statMult * Math.pow(E.growExp, prog - 1) * (elite ? E.eliteMult : 1) * (E.early[prog - 1] ?? 1);
@@ -338,7 +341,10 @@ export function makeFightEnemies() {
   if (three && r < F.threeEnemiesChance) n = 3;
   else if (two && r < F.threeEnemiesChance + F.twoEnemiesChance) n = 2;
   const elite = rnd() < F.eliteChance;
-  return { enemies: Array.from({ length: n }, (_, i) => makeEnemy(prog, { elite: elite && i === 0, group: n })) };
+  // Gruppen: höchstens 2 verschiedene Arten, oft dieselbe Art mehrfach
+  const a = rollSpecies(prog), b = rnd() < F.sameSpeciesChance ? a : rollSpecies(prog);
+  const kinds = n === 1 ? [a] : n === 2 ? [a, b] : [a, a, b];
+  return { enemies: kinds.map((sp, i) => makeEnemy(prog, { sp, elite: elite && i === 0, group: n })) };
 }
 // Trainer-Endboss: Themen-Team eines Typs, Größe wächst mit dem Areal, das letzte Pokémon ist das stärkste
 export function makeTrainer(prog) {

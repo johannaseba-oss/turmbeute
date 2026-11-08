@@ -32,8 +32,16 @@ async function fx(ev) {
   switch (ev.kind) {
     case 'start': stage.trainer = run.battle.trainer?.sprite || null; stage.setScene(run.team[0].dex, standing()); refreshIntents(); renderHud(); return;
     case 'sendout': { const t = run.battle.trainer; stage.setScene(run.team[0].dex, standing()); refreshIntents(); renderHud(); await banner(`${t.name} schickt ${ev.e.name}!`, `noch ${run.battle.reserve.length} im Team`, 800); return; }
-    case 'pattack': stage.lunge('player'); log(ev.move.name + (ev.special ? '!' : '')); if (ev.special) stage.vfx('player', 'level_up_burst', 0.7, 12); blip(ev.special ? 520 : 330, 0.06); return W(200);
-    case 'eattack': { stage.lunge(ev.e.uid); log(`${ev.e.name}: ${{ atk: 'Angriff', strong: 'Wuchtschlag', spez: ev.e.move.name, status: ev.e.move.name }[ev.it] || ''}`); blip(180, 0.08); return W(220); }
+    case 'pattack': {
+      log(ev.move.name + (ev.special ? '!' : ''));
+      blip(ev.special ? 520 : 330, 0.06);
+      const to = ev.e?.uid || K.alive()[0]?.uid;
+      if (ev.all) { stage.play('player', 'Attack'); stage.vfx('player', 'level_up_burst', 0.9, 12); await Promise.all(K.alive().map((x, i) => stage.projectile('player', x.uid, ev.move.type, { arc: 6 + i * 4 }))); return; }
+      if (ev.special) { stage.vfx('player', 'level_up_burst', 0.7, 12); if (to) await stage.projectile('player', to, ev.move.type, { size: 1.2, arc: 4 }); return; }
+      await stage.dash('player', to);
+      return;
+    }
+    case 'eattack': { if (ev.it === 'spez' || ev.it === 'status') await stage.projectile(ev.e.uid, 'player', ev.e.move.type, { size: 1.1, arc: 4 }); else await stage.dash(ev.e.uid, 'player'); log(`${ev.e.name}: ${{ atk: 'Angriff', strong: 'Wuchtschlag', spez: ev.e.move.name, status: ev.e.move.name }[ev.it] || ''}`); blip(180, 0.08); return W(60); }
     case 'hit': {
       stage.hitAt(ev.e.uid, ev.type, ev.crit ? 1.7 : ev.small ? 0.9 : 1.3);
       const col = ev.eff >= 2 ? '#ffd84a' : ev.eff < 1 ? '#a8a4c8' : '#ffffff';
@@ -45,9 +53,10 @@ async function fx(ev) {
       if (ev.small && LABEL_FX[ev.label]) { stage.vfx(ev.e.uid, LABEL_FX[ev.label][0], 1); stage.text(ev.e.uid, ev.label, LABEL_FX[ev.label][1], 10, 46); }
       blip(ev.crit ? 120 : 90, 0.1, 'sawtooth', 0.05);
       renderHud();
-      return W(ev.small ? 160 : 300);
+      await W(ev.small ? 160 : 260);
+      return stage.back();
     }
-    case 'ko': sfx('fp_whoosh', 0.4); await stage.ko(ev.e.uid); return;
+    case 'ko': sfx('fp_whoosh', 0.4); await stage.back(); await stage.faint(ev.e.uid); return;
     case 'status': stage.vfx(ev.e.uid, STATUS_VFX[ev.s], 1); if (!ev.quiet) stage.text(ev.e.uid, STATUS_NAME[ev.s], '#e0b0ff', 11, 40); return W(ev.quiet ? 90 : 260);
     case 'pstatus': stage.vfx('player', STATUS_VFX[ev.s], 1); stage.text('player', STATUS_NAME[ev.s], '#e0b0ff', 11, 40); renderHud(); return W(260);
     case 'heal': stage.vfx('player', 'healing', 1.2, 10); stage.text('player', '+' + ev.v, '#7cff8a', 17); if (ev.label) stage.text('player', ev.label, '#b8ffc0', 10, 46); blip(660, 0.12, 'sine', 0.05); flashHud('heal'); renderHud(); return W(280);
@@ -62,11 +71,12 @@ async function fx(ev) {
       blip(70, 0.12, 'sawtooth', 0.06);
       navigator.vibrate?.(ev.small ? 10 : 25);
       renderHud();
-      return W(ev.small ? 150 : 320);
+      await W(ev.small ? 150 : 280);
+      return stage.back();
     }
     case 'aoe': stage.aoe(ev.type); blip(60, 0.25, 'sawtooth', 0.07); navigator.vibrate?.(30); return stage.wait(320);
     case 'revive': stage.text('player', `${mon(ev.m.dex).name} ist zurück!`, '#7cff8a', 13, 40); flashHud('heal'); renderHud(); return W(400);
-    case 'miss': stage.text('player', 'Ausgewichen!', '#8ac8ff', 13); return W(260);
+    case 'miss': stage.text('player', 'Ausgewichen!', '#8ac8ff', 13); await W(260); return stage.back();
     case 'shield': stage.text('player', '🛡 ' + ev.v, '#8ac8ff', 14); renderHud(); return W(200);
     case 'shieldhit': stage.text('player', '🛡-' + ev.v, '#8ac8ff', 12, 50); return W(100);
     case 'eguard': stage.text(ev.e.uid, '🛡 Schutz', '#8ac8ff', 13); log(`${ev.e.name} schützt sich.`); return W(300);
@@ -78,14 +88,14 @@ async function fx(ev) {
       const a = stage.actors.get('player');
       stage.actors.set('player', stage.actor(ev.m.dex, 'p'));
       await banner(mon(ev.m.dex).name, ev.move.name + '!', 500);
-      stage.lunge('player');
+      await stage.dash('player', ev.e?.uid || K.alive()[0]?.uid);
       setTimeout(() => stage.actors.set('player', a), 900 / stage.speed);
-      return W(200);
+      return;
     }
     case 'sacrifice': stage.vfx('player', 'level_up_burst', 2.2, 12); sfx('fp_rang', 0.5); await banner(`${mon(ev.m.dex).name} geopfert`, 'Die Kraft geht auf dein Team über', 1100); renderHud(); return;
     case 'ball': sfx('ballfall', 0.5); log(itemDef(ev.inst.id).name + '!'); await stage.throwBall(ev.inst.id, ev.e.uid, ev.shakes, ev.ok); return;
     case 'caught': sfx('fp_rang', 0.6); await banner(`${ev.e.name} gefangen!`, ev.full ? 'Team voll – entscheide nach dem Kampf' : 'Neu im Team', 1100); renderHud(); return;
-    case 'faint': sfx('fp_fehler', 0.4); await stage.ko('player'); log(`${mon(ev.m.dex).name} ist besiegt – Beleber oder aus dem Team entfernen`); await stage.wait(400); return;
+    case 'faint': sfx('fp_fehler', 0.4); await stage.back(); await stage.faint('player'); log(`${mon(ev.m.dex).name} ist besiegt – Beleber oder aus dem Team entfernen`); await stage.wait(400); return;
     case 'swap': stage.setScene(run.team[0].dex, standing()); renderHud(); return W(250);
     case 'say': log(ev.text); return W(380);
     case 'update': stage.setScene(run.team[0].dex, standing()); refreshIntents(); renderHud(); return;

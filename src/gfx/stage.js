@@ -12,6 +12,7 @@ export function img(src) {
 const ok = (i) => i && i.complete && i.naturalWidth;
 
 const VFX_TYPE = { Feuer: 'fire_impact', Wasser: 'water_impact', Elektro: 'electric_impact', Pflanze: 'nature_impact', Eis: 'frost_impact', Gift: 'poison_impact', Psycho: 'arcane_impact', Drache: 'arcane_blast', Geist: 'shadow_impact', Unlicht: 'shadow_impact', Fee: 'holy_impact', Normal: 'magic_missile_hit', Flug: 'wind', Kampf: 'sword_clash', Boden: 'earth', Gestein: 'ground_slam', Käfer: 'slime_hit', Stahl: 'sword_clash' };
+const MISSILE = { Feuer: 'fire_missile', Wasser: 'water_missile', Elektro: 'electric_missile', Pflanze: 'nature_missile', Eis: 'frost_missile', Gift: 'poison_missile', Psycho: 'arcane_missile', Drache: 'arcane_missile', Geist: 'shadow_missile', Unlicht: 'shadow_missile', Fee: 'holy_missile', Normal: 'holy_missile', Flug: 'holy_missile', Kampf: 'holy_missile', Boden: 'nature_missile', Gestein: 'holy_missile', Käfer: 'nature_missile', Stahl: 'holy_missile' };
 const VFX_STATUS = { burn: 'burning', poison: 'poisoned', para: 'shocked', sleep: 'weakened', freeze: 'frozen', confuse: 'charmed' };
 export const STATUS_ICON = { burn: '🔥', poison: '☠', para: '⚡', sleep: '💤', freeze: '❄', confuse: '💫' };
 const INTENT = { atk: ['⚔', '#ff8a7a'], strong: ['💥', '#ff5050'], spez: ['✦', '#c8a0ff'], status: ['☣', '#c070f0'], guard: ['🛡', '#8ac8ff'], buff: ['▲', '#ffd060'] };
@@ -24,6 +25,8 @@ export class Stage {
     this.fx = [];
     this.texts = [];
     this.ball = null;
+    this.shots = [];
+    this.after = null;
     this.speed = 1;
     this.t = performance.now();
     this.onTap = null;
@@ -164,16 +167,26 @@ export class Stage {
       if (ok(f.im)) {
         const shake = a.shake > this.t ? Math.sin(this.t / 25) * 3 * ss / 2 : 0;
         const lunge = a.lunge > this.t ? Math.sin(((a.lunge - this.t) / 260) * Math.PI) * 10 * ss * (a.side === 'p' ? 1 : -1) : 0;
-        const dx = Math.round(p.x - (f.fw * ss) / 2 + shake + lunge), dy = Math.round(p.y - f.fh * ss * 0.7 + a.dy);
-        if (e?.elite) { x.save(); x.shadowColor = '#ffd84a'; x.shadowBlur = 14 * dpr; }
-        x.drawImage(f.im, f.sx, f.sy, f.fw, f.fh, dx, dy, f.fw * ss, f.fh * ss);
-        if (e?.elite) x.restore();
+        const fx0 = p.x + shake + lunge + (a.ox || 0), fy0 = p.y + a.dy + (a.oy || 0);
+        const w = f.fw * ss, hh = f.fh * ss;
+        // Nachbilder beim Ansturm
+        for (const g of a.trail || []) {
+          x.globalAlpha = a.alpha * g.a;
+          x.drawImage(f.im, f.sx, f.sy, f.fw, f.fh, Math.round(p.x + g.ox - w / 2), Math.round(p.y + g.oy - hh * 0.7), w, hh);
+        }
+        x.globalAlpha = a.alpha;
+        x.save();
+        x.translate(Math.round(fx0), Math.round(fy0));
+        if (a.rot) x.rotate(a.rot);
+        if (e?.elite) { x.shadowColor = '#ffd84a'; x.shadowBlur = 14 * dpr; }
+        x.drawImage(f.im, f.sx, f.sy, f.fw, f.fh, Math.round(-w / 2), Math.round(-hh * 0.7), w, hh);
+        x.shadowBlur = 0;
         if (a.flash > this.t) {
-          x.save(); x.globalCompositeOperation = 'source-atop'; x.restore();
-          x.globalAlpha = a.alpha * 0.6; x.globalCompositeOperation = 'lighter';
-          x.drawImage(f.im, f.sx, f.sy, f.fw, f.fh, dx, dy, f.fw * ss, f.fh * ss);
+          x.globalAlpha = a.alpha * 0.7; x.globalCompositeOperation = 'lighter';
+          x.drawImage(f.im, f.sx, f.sy, f.fw, f.fh, Math.round(-w / 2), Math.round(-hh * 0.7), w, hh);
           x.globalCompositeOperation = 'source-over';
         }
+        x.restore();
       }
       x.globalAlpha = 1;
     }
@@ -197,6 +210,21 @@ export class Stage {
         x.drawImage(im, sx, sy, fw, fh, v.x - (fw * k) / 2, v.y - (fh * k) / 2, fw * k, fh * k);
         x.globalCompositeOperation = 'source-over';
       }
+      return true;
+    });
+    // Geschosse (Spezial-Attacken)
+    this.shots = (this.shots || []).filter((sh) => {
+      const k = (now - sh.t0) / (sh.ms / this.speed);
+      if (k >= 1) { sh.done?.(); return false; }
+      const frames = D.vfx_sheets[sh.key], im = img(artUrl(`vfx/${sh.key}.png`));
+      const px = sh.x0 + (sh.x1 - sh.x0) * k, py = sh.y0 + (sh.y1 - sh.y0) * k - Math.sin(k * Math.PI) * sh.arc;
+      if (frames && ok(im)) {
+        const [sx, sy, fw, fh] = frames[Math.floor((now - sh.t0) / 40) % frames.length], z = s * 0.75 * sh.size;
+        x.save(); x.translate(px, py); x.rotate(Math.atan2(sh.y1 - sh.y0, sh.x1 - sh.x0));
+        x.globalCompositeOperation = 'lighter';
+        x.drawImage(im, sx, sy, fw, fh, -fw * z * 0.75, (-fh * z) / 2, fw * z, fh * z);
+        x.restore();
+      } else { x.fillStyle = sh.color; x.beginPath(); x.arc(px, py, 4 * s, 0, Math.PI * 2); x.fill(); }
       return true;
     });
     // Ball
@@ -314,6 +342,54 @@ export class Stage {
   text(uid, text, color, size = 16, lift = 30) {
     const p = this.pos(uid);
     this.texts.push({ text, color, x: p.x + (Math.random() - 0.5) * 20 * this.dpr, y: p.y - lift * this.scale(), t0: this.t, size });
+  }
+  // Zeitgesteuerte Animation (läuft auch im Hintergrund-Tab weiter)
+  anim(ms, step) {
+    return new Promise((res) => {
+      const t0 = performance.now(), dur = ms / this.speed;
+      const tick = () => { const k = Math.min(1, (performance.now() - t0) / dur); step(k); k < 1 ? setTimeout(tick, 16) : res(); };
+      tick();
+    });
+  }
+  // Ansturm: zum Ziel rennen, zuschlagen (Attack-Animation), zurück
+  async dash(uid, toUid) {
+    const a = this.actors.get(uid);
+    if (!a) return;
+    const p0 = this.pos(uid), p1 = toUid ? this.pos(toUid) : { x: p0.x + (a.side === 'p' ? 1 : -1) * this.c.width * 0.3, y: p0.y };
+    const gap = 26 * this.scale() * (a.side === 'p' ? 1 : -1);
+    const tx = p1.x - p0.x - gap, ty = (p1.y - p0.y) * 0.9;
+    a.trail = [];
+    await this.anim(170, (k) => { const e = k * k; a.ox = tx * e; a.oy = ty * e - Math.sin(k * Math.PI) * 8 * this.dpr; a.trail = [0.45, 0.25].map((al, i) => ({ ox: tx * Math.max(0, e - 0.15 * (i + 1)), oy: ty * Math.max(0, e - 0.15 * (i + 1)), a: al })); });
+    a.trail = [];
+    this.play(uid, 'Attack');
+    await this.wait(140);
+    this.after = () => this.anim(220, (k) => { a.ox = tx * (1 - k); a.oy = ty * (1 - k); });
+  }
+  // Rückweg nach dem Treffer (nach dash)
+  async back() { const f = this.after; this.after = null; if (f) await f(); }
+  // Geschoss in Typfarbe vom Angreifer zum Ziel
+  projectile(fromUid, toUid, type, { size = 1, arc = 0 } = {}) {
+    const a = this.actors.get(fromUid);
+    if (a) this.play(fromUid, 'Attack');
+    const p0 = this.pos(fromUid), p1 = this.pos(toUid), s = this.scale();
+    return new Promise((res) => {
+      let fin = false;
+      const done = () => { if (!fin) { fin = true; res(); } };
+      setTimeout(done, 600 / this.speed + 80); // falls der Tab gedrosselt zeichnet
+      setTimeout(() => this.shots.push({ key: MISSILE[type] || 'holy_missile', x0: p0.x, y0: p0.y - 14 * s, x1: p1.x, y1: p1.y - 14 * s, t0: this.t, ms: 360, size, arc: arc * s, color: '#fff', done }), 160 / this.speed);
+    });
+  }
+  // K.O.: aufblitzen, zittern, umkippen, versinken und verblassen
+  async faint(uid) {
+    const a = this.actors.get(uid);
+    if (!a) return;
+    this.play(uid, 'Hurt');
+    for (let i = 0; i < 3; i++) { a.flash = this.t + 90; a.shake = this.t + 120; await this.wait(150); }
+    this.text(uid, 'K.O.', '#ff6070', 16, 40);
+    const dir = a.side === 'p' ? -1 : 1;
+    await this.anim(520, (k) => { a.rot = dir * (Math.PI / 2) * Math.min(1, k * 1.4); a.dy = k * 8 * this.dpr; a.alpha = k < 0.55 ? 1 : 1 - (k - 0.55) / 0.45; });
+    this.vfx(uid, 'pixel_burst', 1.1, 6);
+    a.alpha = 0;
   }
   lunge(uid) { const a = this.actors.get(uid); if (a) { a.lunge = this.t + 260; this.play(uid, 'Attack'); } }
   async ko(uid) {

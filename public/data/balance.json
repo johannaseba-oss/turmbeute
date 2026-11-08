@@ -69,7 +69,8 @@
       0.75,
       0.6
     ],
-    "_hinweis": "Gegnerzahl je wildem Kampf: ab twoEnemiesFrom (im 1. Areal) Chance auf 2, ab threeEnemiesFrom auf 3; in späteren Arealen immer möglich. groupMult = KP/Angriff je Gegner bei 1/2/3 Gegnern."
+    "_hinweis": "Gegnerzahl je wildem Kampf: ab twoEnemiesFrom (im 1. Areal) Chance auf 2, ab threeEnemiesFrom auf 3; in späteren Arealen immer möglich. groupMult = KP/Angriff je Gegner bei 1/2/3 Gegnern. Gruppen haben höchstens 2 verschiedene Arten; sameSpeciesChance = alle dieselbe Art.",
+    "sameSpeciesChance": 0.55
   },
   "enemy": {
     "_hinweis": "Gegner-Level = levelBase + (Kampf insgesamt-1)·levelPerFight (+0–1). Werte nach Pokémon-Formel × growExp^(Kampf-1) × early/elite/legend.",

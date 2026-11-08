@@ -198,7 +198,7 @@ async function doAction(action, arg) {
   }
   if (action === 'attack') {
     const e = target();
-    await fx({ kind: 'pattack', move: mv.attack });
+    await fx({ kind: 'pattack', move: mv.attack, e });
     await strike(e, mv.attack, { stats, mods });
     if (g(mods, 'doubleHit') > 0 && rnd() < g(mods, 'doubleHit') && alive().length) { await fx({ kind: 'say', text: 'Doppelschlag!' }); await strike(target(), mv.attack, { stats, mods }); }
   } else if (action === 'special') {
@@ -207,7 +207,7 @@ async function doAction(action, arg) {
     b.energy -= cost;
     const e = target();
     const move = { ...mv.special, power: mv.special.power * (1 + g(mods, 'specialPct')) };
-    await fx({ kind: 'pattack', move, special: true });
+    await fx({ kind: 'pattack', move, special: true, e });
     await strike(e, move, { stats, mods, label: move.name, statusBonus: rnd() < 0.3 ? TYPE_STATUS[move.type] : null });
   } else if (action === 'wait') {
     await fx({ kind: 'say', text: 'Durchatmen …' });
@@ -253,7 +253,7 @@ async function areaAttack(stats, mods) {
   b.energy -= cost;
   const mv = leadMoves().special;
   const move = { ...mv, name: 'Rundumschlag', power: mv.power * C().areaMult * (1 + g(mods, 'specialPct')) };
-  await fx({ kind: 'pattack', move, special: true });
+  await fx({ kind: 'pattack', move, special: true, all: true });
   await fx({ kind: 'aoe', type: move.type });
   for (const [i, e] of alive().entries()) await strike(e, move, { stats, mods, label: i ? null : 'Rundumschlag', secondary: i > 0 });
   return true;
@@ -292,7 +292,7 @@ export async function applyUse(inst, u, stats, mods) {
   if (u.burst && types.length && alive().length) await typeBurst(types[0], u.burst * boost, stats, mods, def.name);
   if (u.attack && alive().length) {
     const a = u.attack, move = { name: a.name, type: a.type, cat: 'spez', power: a.power * boost };
-    await fx({ kind: 'pattack', move, special: true });
+    await fx({ kind: 'pattack', move, special: true, e: target(), all: a.all });
     if (a.all) await fx({ kind: 'aoe', type: a.type });
     for (const e of a.all ? alive() : [target()]) await strike(e, move, { stats, mods, label: a.name, statusBonus: a.status, secondary: a.all });
   }
@@ -301,7 +301,7 @@ export async function applyUse(inst, u, stats, mods) {
 async function typeBurst(type, power, stats, mods, label) {
   const st = P().stacks[type] || 0;
   const move = { name: 'Entladung', type, cat: 'spez', power: power * (1 + st * 0.08) };
-  await fx({ kind: 'pattack', move, special: true });
+  await fx({ kind: 'pattack', move, special: true, e: target() });
   await strike(target(), move, { stats, mods, label: `${type}-Entladung`, secondary: true });
   for (const syn of P().active.synergies.filter((s) => s.types.includes(type))) {
     if (!alive().length) break;
@@ -329,7 +329,7 @@ async function useMon(idx, stats, mods) {
   const mv = monMove(m), sp = mon(m.dex), own = P(m);
   const k = C().useMonMult * (1 + g(mods, 'monUsePct'));
   const move = { name: mv.name, type: mv.type, cat: mv.cat === 'phys' ? 'phys' : 'spez', power: mv.power * k };
-  await fx({ kind: 'monuse', m, move });
+  await fx({ kind: 'monuse', m, move, e: target() });
   await strike(target(), move, { stats: own.stats, mods: own.mods, who: m, label: `${sp.name}: ${mv.name}`, statusBonus: TYPE_STATUS[mv.type] });
   return true;
 }
