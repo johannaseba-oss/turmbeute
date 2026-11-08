@@ -1,5 +1,5 @@
 {
-  "_hinweis": "Keystones: alle keystoneEvery Floors und nach jedem Boss eine aus 3 wählen. Gelten für den ganzen Lauf. ops wie bei Items.",
+  "_hinweis": "Keystones: am Ende jedes Areals eine aus 3 wählen. Gelten für den ganzen Lauf. ops wie bei Items.",
   "keystones": [
     {
       "id": "typmeister",
@@ -15,7 +15,7 @@
     {
       "id": "recycler",
       "name": "Recycler",
-      "text": "Verbrauchte Items geben +2 Stacks ihrer Typen für den Floor",
+      "text": "Verbrauchte Items geben +2 Stacks ihrer Typen bis zur nächsten Rast",
       "ops": [
         {
           "op": "consumeStacks",

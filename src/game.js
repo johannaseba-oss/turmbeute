@@ -1,13 +1,14 @@
 // Spielablauf: Titel → Starter → Floors (Kämpfe → Beute) → Rast (Shop, Zerlegen, Keystones) → … → Game Over.
-import { D, mon, itemDef, portraitUrl, itemIconUrl, typeColor, rarityColor, pick, rnd } from './data.js';
+import { D, mon, itemDef, portraitUrl, itemIconUrl, typeColor, rarityColor, rarityName, pick, rnd } from './data.js';
 import { computeStats, g, sumOps, keystoneOps, opText, expGain } from './mods.js';
 import * as R from './run.js';
 import { run } from './run.js';
 import * as K from './combat.js';
 import { Stage } from './gfx/stage.js';
 import { $, h, toast, openSheet, closeSheet, sheetOpen } from './ui/dom.js';
+import { attachTip, hideTip } from './ui/tip.js';
 import { renderHud } from './ui/hud.js';
-import { itemHead, itemInfo, gainText } from './ui/sheets.js';
+import { itemHead, itemInfo, gainText, itemTip, mergeLabel } from './ui/sheets.js';
 import { starterScreen } from './ui/starter.js';
 import { setMusic, sfx, blip, toggleSound, soundOn } from './audio.js';
 
@@ -41,6 +42,7 @@ async function fx(ev) {
       if (et && !ev.small) stage.text(ev.e.uid, et, col, 11, 44);
       if (ev.crit) stage.vfx(ev.e.uid, 'critical_hit', 1.2);
       if (ev.label && !ev.small) log(ev.label);
+      if (ev.small && LABEL_FX[ev.label]) { stage.vfx(ev.e.uid, LABEL_FX[ev.label][0], 1); stage.text(ev.e.uid, ev.label, LABEL_FX[ev.label][1], 10, 46); }
       blip(ev.crit ? 120 : 90, 0.1, 'sawtooth', 0.05);
       renderHud();
       return W(ev.small ? 160 : 300);
@@ -48,10 +50,13 @@ async function fx(ev) {
     case 'ko': sfx('fp_whoosh', 0.4); await stage.ko(ev.e.uid); return;
     case 'status': stage.vfx(ev.e.uid, STATUS_VFX[ev.s], 1); if (!ev.quiet) stage.text(ev.e.uid, STATUS_NAME[ev.s], '#e0b0ff', 11, 40); return W(ev.quiet ? 90 : 260);
     case 'pstatus': stage.vfx('player', STATUS_VFX[ev.s], 1); stage.text('player', STATUS_NAME[ev.s], '#e0b0ff', 11, 40); renderHud(); return W(260);
-    case 'heal': stage.vfx('player', 'healing', 0.9, 10); stage.text('player', '+' + ev.v, '#7cff8a', 15); renderHud(); return W(160);
+    case 'heal': stage.vfx('player', 'healing', 1.2, 10); stage.text('player', '+' + ev.v, '#7cff8a', 17); if (ev.label) stage.text('player', ev.label, '#b8ffc0', 10, 46); blip(660, 0.12, 'sine', 0.05); flashHud('heal'); renderHud(); return W(280);
     case 'phit': {
-      if (!ev.small) stage.hitAt('player', ev.type, 1.2); else stage.text('player', ev.label || '', '#ff9a9a', 10, 46);
-      stage.text('player', '-' + ev.dmg, '#ff6070', ev.small ? 13 : 18);
+      const lf = ev.small && LABEL_FX[ev.label];
+      if (!ev.small) stage.hitAt('player', ev.type, 1.2);
+      else { if (lf) stage.vfx('player', lf[0], 1.1); const a = stage.actors.get('player'); if (a) a.shake = stage.t + 260; if (ev.label) stage.text('player', ev.label, lf?.[1] || '#ff9a9a', 10, 46); }
+      stage.text('player', '-' + ev.dmg, lf?.[1] || '#ff6070', ev.small ? 15 : 18);
+      flashHud(lf?.[2] || 'dmg');
       const et = effText(ev.eff ?? 1);
       if (et && !ev.small) stage.text('player', et, '#ffd84a', 11, 44);
       blip(70, 0.12, 'sawtooth', 0.06);
@@ -286,11 +291,26 @@ export const G = {
   // --- Inventar-Aktionen ---
   // Item an Pokémon mi anlegen; ist es voll, wird gefragt, welches Item ersetzt wird
   equip(idx, mi, replace = null) {
+    const name = itemDef(run.inv[idx]?.id)?.name;
     const r = R.equip(idx, mi, replace);
     if (r === 'full') return replacePicker(idx, mi);
+    if (r === 'merged') return mergedFx(run.team[mi].held.find((x) => itemDef(x.id).name === name));
     if (r === 'evolved') sfx('fp_rang', 0.5); else sfx('fp_klick', 0.4);
     G.processEvents();
     G.refresh();
+  },
+  // Inventar-Item idx auf ein gleiches Item ziehen (ref = {inv} oder {mon, slot})
+  merge(idx, ref) {
+    const src = R.takeOne(idx);
+    if (!src) return;
+    mergedFx(R.mergeInto(src, ref));
+  },
+  mergeLoot(li, ref) {
+    const it = run.loot.items[li];
+    if (!it || it.taken) return;
+    it.taken = true;
+    const { taken, ...src } = it;
+    mergedFx(R.mergeInto(src, ref));
   },
   unequip(mi, slot) { if (!R.unequip(mi, slot)) return G.toastNo('Kein Platz im Inventar.'); G.refresh(); },
   // Trank o. Ä. außerhalb des Kampfes auf ein Pokémon
@@ -299,7 +319,9 @@ export const G = {
     if (m.fainted) return G.toastNo('Besiegte Pokémon werden in der Rast wiederbelebt.');
     R.takeOne(idx);
     const max = R.fixHp(m);
+    const before = m.hp;
     m.hp = Math.min(max, m.hp + Math.round(max * (u.heal || 0)));
+    toast(`+${m.hp - before} KP für ${mon(m.dex).name}`);
     sfx('fp_richtig', 0.4);
     G.refresh();
   },
@@ -380,6 +402,24 @@ export const G = {
   },
 };
 
+function mergedFx(dst) {
+  if (!dst) return G.refresh();
+  sfx('fp_rang', 0.5);
+  toast(`✨ ${itemDef(dst.id).name} aufgewertet: ${rarityName(dst.r)} · Stufe ${dst.lvl}`);
+  G.processEvents();
+  G.refresh();
+}
+// Kurzes Aufleuchten der Anführer-Leiste bei Heilung oder Schaden
+function flashHud(kind) {
+  const p = $('#player');
+  p.classList.remove('fl-heal', 'fl-dmg', 'fl-poison', 'fl-burn');
+  void p.offsetWidth;
+  p.classList.add('fl-' + kind);
+  clearTimeout(p._fl);
+  p._fl = setTimeout(() => p.classList.remove('fl-' + kind), 700);
+}
+const LABEL_FX = { Gift: ['poisoned', '#d58aff', 'poison'], Verbrennung: ['burning', '#ffa040', 'burn'], Rückstoß: ['slash', '#ff8a8a', 'dmg'], Verwirrung: ['charmed', '#ffb0e0', 'dmg'], Egelsamen: ['nature_impact', '#9fe07a', 'dmg'], Hagel: ['frost_impact', '#a8e8ff', 'dmg'], Albtraum: ['shadow_impact', '#b090ff', 'dmg'], Tarnsteine: ['ground_slam', '#e0c890', 'dmg'], Dornen: ['ground_slam', '#e0c890', 'dmg'] };
+
 // Hintergrund-Sprite für den aktuellen Floor (Reihenfolge pro Lauf gemischt, Boss-Floors eigene)
 function floorBg() {
   const Bg = D.B.backgrounds;
@@ -448,6 +488,7 @@ function showEvo() {
 
 // --- Panels über der Bühne (Beute, Rast/Shop, Keystones) ------------------------------
 function renderPanel() {
+  hideTip();
   const p = $('#panel');
   if (!run || run.phase === 'battle' || run.phase === 'floor') { p.classList.remove('on'); return; }
   p.classList.add('on');
@@ -457,10 +498,13 @@ function renderPanel() {
   if (run.phase === 'rest') return p.replaceChildren(...restPanel());
   p.replaceChildren();
 }
-function itemCard(inst, extra, onclick, mark = 'ok') {
+function itemCard(inst, extra, onclick, mark = 'ok', tipExtra = null) {
   const def = itemDef(inst.id);
-  return h('div.card', { class: 'card' + (inst.taken || inst.sold ? ' taken' : ` ${mark}`), '--rc': rarityColor(inst.r || def.rarity), onclick },
-    h('img', { src: itemIconUrl(inst.id) }), h('div.nm', def.name), extra);
+  const up = !inst.taken && !inst.sold && R.mergeTargets(inst).length;
+  const el = h('div.card', { class: 'card' + (inst.taken || inst.sold ? ' taken' : ` ${mark}`), '--rc': rarityColor(inst.r || def.rarity), onclick },
+    up ? h('span.upb', '↑') : null, h('img', { src: itemIconUrl(inst.id) }), h('div.nm', def.name), extra);
+  attachTip(el, () => itemTip(inst, tipExtra));
+  return el;
 }
 function lootPanel() {
   const L = run.loot;
@@ -474,15 +518,17 @@ function lootPanel() {
         full ? h('button.btn.pri', { onclick: () => swapPicker(i) }, 'Tauschen') : h('button.btn.pri', { onclick: () => G.takeMon(i) }, 'Aufnehmen'),
         h('button.btn', { onclick: () => G.dropMon(i) }, 'Freilassen'))));
   }
-  out.push(h('div.hint', 'Tippe ein Item zum Ansehen. Volles Inventar? Zerlege direkt.'));
+  const left = L.items.filter((x) => !x.taken).length;
+  out.push(h('div.hint', 'Tippe ein Item: nehmen, zerlegen, verkaufen oder aufwerten (↑ = du hast es schon). Was du liegen lässt, ist beim Weitergehen weg.'));
   out.push(h('div.cards', L.items.map((it, i) => itemCard(it, h('div.sub', { style: { fontSize: '10px', color: '#9a94c0' } }, 'St.' + it.lvl), () => lootSheet(i)))));
-  out.push(h('div.rowbtns', h('button.btn', { onclick: () => L.items.forEach((_, i) => !L.items[i].taken && R.freeSlots() > 0 && G.takeLoot(i)) }, 'Alle nehmen')));
+  if (left) out.push(h('div.rowbtns', h('button.btn', { onclick: () => L.items.forEach((_, i) => !L.items[i].taken && R.freeSlots() > 0 && G.takeLoot(i)) }, `Alle ${left} ins Inventar`, h('small', `${R.freeSlots()} Plätze frei`))));
   return out;
 }
 function lootSheet(i) {
   const it = run.loot.items[i];
   if (it.taken) return;
   openSheet(itemHead(it), itemInfo(it), h('div.btns',
+    ...R.mergeTargets(it).slice(0, 2).map((t) => h('button.btn.purple', { onclick: () => { closeSheet(); G.mergeLoot(i, t); } }, '↑ Aufwerten', h('small', mergeLabel(it, t)))),
     h('button.btn.pri', { onclick: () => { closeSheet(); G.takeLoot(i); } }, 'Nehmen', h('small', `${R.freeSlots()} Plätze frei`)),
     h('button.btn.purple', { onclick: () => { closeSheet(); G.salvageLoot(i); } }, 'Sofort zerlegen'),
     h('button.btn.gold', { onclick: () => { closeSheet(); G.sellLoot(i); } }, 'Verkaufen', h('small', `+${R.sellPrice(it)} Gold`)),
@@ -503,7 +549,7 @@ function keystonePanel() {
 function restPanel() {
   const S = run.shop;
   return [h('div.ph', `Rast · Areal ${run.areal}, nach Kampf ${run.fight}`, h('small', 'Team geheilt')),
-    h('div.cards', S.offers.map((o, i) => { const p = R.itemPrice(o), can = run.gold >= p; return itemCard(o, h('div.pr', { class: 'pr ' + (can ? 'ok' : 'no') }, o.sold ? 'verkauft' : p + ' G'), () => shopSheet(i), can ? 'ok' : 'no'); })),
+    h('div.cards', S.offers.map((o, i) => { const p = R.itemPrice(o), can = run.gold >= p; return itemCard(o, h('div.pr', { class: 'pr ' + (can ? 'ok' : 'no') }, o.sold ? 'verkauft' : p + ' G'), () => shopSheet(i), can ? 'ok' : 'no', `Preis: ${p} Gold${can ? '' : ' – zu teuer'}`); })),
     h('div.rowbtns', h('button.btn.purple', { class: 'btn purple ' + (run.gold >= R.rerollCost() ? 'ok' : 'no'), onclick: () => G.reroll() }, `Neu würfeln`, h('small', R.rerollCost() + ' Gold'))),
     h('div.hint', 'Grün = kannst du dir leisten, rot = zu teuer. Inventar-Items antippen: Anlegen, Zerlegen oder Verkaufen.')];
 }

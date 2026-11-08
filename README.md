@@ -28,6 +28,8 @@ Energie: Zeile über den Kampf-Knöpfen; +1 pro Runde (Warten +1 extra), Spezial
 
 Kampfaktionen: Angriff (neutral), Spezial (Typ des Anführers, kostet Energie), Warten, Item verbrauchen, Ball werfen, Pokémon einsetzen (starke Attacke, danach bis zum nächsten Floor erschöpft) oder opfern (Floor-Boost + permanente Affinität). Gegner antippen = anvisieren; über jedem Gegner steht seine nächste Absicht.
 
+Aufwerten: Ein zweites gleiches Item (Haltegegenstand, Typ-Tafel, TM) auf das vorhandene ziehen – im Inventar oder auf das Pokémon, das es trägt. Gleiche Seltenheit wird eine Stufe seltener (bis Legendär), dazu immer +1 Item-Stufe. ↑ markiert Items, die du aufwerten kannst. Mit der Maus zeigt Überfahren alle Effekte als Tooltip; auf dem Handy öffnet Antippen die Details.
+
 Fangen: Formel wie im Original (KP, Fangrate der Art, Ball, Status), 4 Schüttelproben.
 
 ## Daten (alles in `public/data/`)

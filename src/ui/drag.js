@@ -1,5 +1,5 @@
-// Ziehen & Ablegen außerhalb des Kampfes: Item auf Pokémon = anlegen, auf Inventarplatz = umsortieren.
-import { run, canEquip } from '../run.js';
+// Ziehen & Ablegen außerhalb des Kampfes: Item auf Pokémon = anlegen (gleiches Item dort = aufwerten), auf gleiches Item im Inventar = aufwerten, sonst umsortieren.
+import { run, canEquip, canMergeKind } from '../run.js';
 import { h } from './dom.js';
 import { itemIconUrl } from '../data.js';
 import { G } from '../game.js';
@@ -32,6 +32,7 @@ function drop(idx, t) {
   const inst = run.inv[idx];
   if (t.dataset.inv != null) {
     const j = +t.dataset.inv;
+    if (j !== idx && run.inv[j]?.id === inst.id && canMergeKind(inst)) return G.merge(idx, { inv: j });
     [run.inv[idx], run.inv[j]] = [run.inv[j], run.inv[idx]];
     return G.refresh();
   }

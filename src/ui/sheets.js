@@ -1,7 +1,7 @@
 // Detail-Sheets: Item, Team-Pokémon (Werte, EP, Items), Typ-Stacks, Werte.
 import { D, mon, itemDef, portraitUrl, itemIconUrl, typeColor, rarityColor, rarityName } from '../data.js';
 import { computeStats, equipOps, itemStacks, opText, STAT_NAME, STATS, monPerk, g, heldOf, heldSlots, expFor } from '../mods.js';
-import { run, salvageGain, sellPrice, canEquip, itemPrice, fixHp } from '../run.js';
+import { run, salvageGain, sellPrice, canEquip, itemPrice, fixHp, mergeTargets, mergeResult } from '../run.js';
 import { B, alive, catchChance, useEffect, monMove, specialCost } from '../combat.js';
 import { h, openSheet, closeSheet, fmt } from './dom.js';
 import { G } from '../game.js';
@@ -59,6 +59,17 @@ function ballText(def) {
   return p.join(', ');
 }
 
+// Beschriftung eines Aufwertungs-Ziels: "mit deinem X (bei Glumanda) → Selten · St. 4"
+export function mergeLabel(src, t) {
+  const r = mergeResult(src, t.item), where = t.mon != null ? ` an ${mon(run.team[t.mon].dex).name}` : '';
+  return `mit deinem${where} (St. ${t.item.lvl}) → ${rarityName(r.r)} · St. ${r.lvl}`;
+}
+// Inhalt für den Hover-Tooltip (Maus): Kopf, Effekte, Aufwertung
+export function itemTip(inst, extra = null) {
+  const t = mergeTargets(inst)[0];
+  return [itemHead(inst), extra ? h('div.tipx', extra) : null, itemInfo(inst), t ? h('div.tipup', '↑ Aufwertbar ' + mergeLabel(inst, t)) : null];
+}
+
 // --- Item im Inventar ----------------------------------------------------------
 export function itemSheet(idx) {
   const inst = run.inv[idx];
@@ -76,6 +87,7 @@ export function itemSheet(idx) {
     } else if (useEffect(inst) && !def.restOnly) btns.push(h('button.btn.purple', { onclick: () => { closeSheet(); G.act('item', { idx }); } }, 'Verbrauchen', h('small', 'kostet die Aktion')));
     btns.push(h('button.btn', { onclick: closeSheet }, 'Zurück'));
   } else {
+    for (const t of mergeTargets(inst, idx).slice(0, 2)) btns.push(h('button.btn.purple', { onclick: () => { closeSheet(); G.merge(idx, t); } }, '↑ Aufwerten', h('small', mergeLabel(inst, t))));
     if (canEquip(inst)) btns.push(h('button.btn.pri', { onclick: () => equipPicker(idx) }, 'Anlegen'));
     if (def.kind === 'potion' && def.use?.heal) btns.push(h('button.btn.pri', { onclick: () => monPicker(idx, (i) => G.useOn(idx, i)) }, 'Benutzen'));
     if (def.kind === 'candy') btns.push(h('button.btn.pri', { onclick: () => candyPicker(idx) }, 'Benutzen'));
@@ -95,7 +107,7 @@ function equipPicker(idx) {
     const n = heldOf(m).length;
     return h('button.btn', { onclick: () => { closeSheet(); G.equip(idx, i); } },
       h('img', { src: portraitUrl(m.dex), style: { width: '28px', height: '28px', imageRendering: 'pixelated', verticalAlign: 'middle', marginRight: '6px' } }),
-      sp.name, h('small', evo ? `✨ entwickelt sich zu ${mon(evo.to).name}` : `${n}/${max} Items${n >= max ? ' – ersetzt eins' : ''}`));
+      sp.name, h('small', evo ? `✨ entwickelt sich zu ${mon(evo.to).name}` : heldOf(m).some((x) => x.id === inst.id) && ['held', 'gem', 'tm'].includes(def.kind) ? '↑ wertet sein gleiches Item auf' : `${n}/${max} Items${n >= max ? ' – ersetzt eins' : ''}`));
   });
   openSheet(itemHead(inst), h('div.hint', 'An welches Pokémon? Items wirken für ihren Träger, Typ-Stacks fürs ganze Team.'), h('div.btns', targets, h('button.btn', { onclick: () => itemSheet(idx) }, 'Zurück')));
 }
@@ -119,8 +131,8 @@ export function monSheet(i) {
   const st = D.stacks;
   const btns = [];
   if (inBattle) {
-    btns.push(h('button.btn.pri', { disabled: m.used || m.fainted || b.busy, onclick: () => { closeSheet(); G.act('mon', { idx: i }); } }, 'Einsetzen', h('small', m.used ? 'erschöpft bis nächster Floor' : `${mv.name} (${mv.type})`)));
-    btns.push(h('button.btn.warn', { disabled: run.team.length <= 1 || b.busy, onclick: () => confirmSac(i) }, 'Opfern', h('small', 'massiver Floor-Boost')));
+    btns.push(h('button.btn.pri', { disabled: m.used || m.fainted || b.busy, onclick: () => { closeSheet(); G.act('mon', { idx: i }); } }, 'Einsetzen', h('small', m.used ? 'erschöpft bis zur nächsten Rast' : `${mv.name} (${mv.type})`)));
+    btns.push(h('button.btn.warn', { disabled: run.team.length <= 1 || b.busy, onclick: () => confirmSac(i) }, 'Opfern', h('small', 'massiver Boost bis zur Rast')));
     if (i > 0) btns.push(h('button.btn', { disabled: b.busy || m.fainted, onclick: () => { closeSheet(); G.act('lead', { idx: i }); } }, 'Als Anführer', h('small', 'kostet die Aktion')));
   } else {
     if (i > 0) btns.push(h('button.btn.pri', { disabled: m.fainted, onclick: () => { closeSheet(); G.setLead(i); } }, 'Als Anführer'));
@@ -146,8 +158,8 @@ export function monSheet(i) {
 function confirmSac(i) {
   const m = run.team[i], sp = mon(m.dex), S = D.B.sacrifice;
   openSheet(h('h3', `${sp.name} opfern?`), h('ul.fx',
-    li(`Für diesen Floor: +${Math.round(S.floorAllPct * 100)} % alle Werte`),
-    li(`+${S.stackMult}× seine Typ-Stacks (${sp.types.join(', ')}) für den Floor`),
+    li(`Bis zur nächsten Rast: +${Math.round(S.floorAllPct * 100)} % alle Werte`),
+    li(`+${S.stackMult}× seine Typ-Stacks (${sp.types.join(', ')}) bis zur nächsten Rast`),
     li(`Permanent: +${S.affinity} Affinität für ${sp.types.join(', ')}`),
     li(`Heilt ${S.healPct * 100} % KP`), li('Das Pokémon verlässt das Team für immer.', 'off')),
   h('div.btns', h('button.btn.warn', { onclick: () => { closeSheet(); G.act('sacrifice', { idx: i }); } }, 'Opfern'), h('button.btn', { onclick: () => monSheet(i) }, 'Abbrechen')));
@@ -179,7 +191,7 @@ export function stacksSheet() {
       h('ul.fx', ...cfg.per.map((o) => li(opText({ ...o, v: o.v * n * k }))), ...cfg.tiers.map((tr) => li(`${tr.at}: ${tr.text}`, n >= tr.at ? 'on' : 'off'))));
   });
   const syn = S.synergies.map((s) => li(`${s.name} (${s.types.map((t) => t + ' ' + s.min).join(' + ')}): ${s.text}`, active.synergies.includes(s) ? 'on' : 'off'));
-  openSheet(h('h3', 'Typ-Stacks'), h('div.hint', 'Stacks kommen von Team-Pokémon (Haupttyp +2, Zweittyp +1), angelegten Items und Floor-Boni. Affinität aus dem Zerlegen verstärkt alle Effekte eines Typs. Verbrauchst du ein Typ-Item, zündet eine aktive Synergie dieses Typs zusätzlich.'),
+  openSheet(h('h3', 'Typ-Stacks'), h('div.hint', 'Stacks kommen von Team-Pokémon (Haupttyp +2, Zweittyp +1), angelegten Items und Boni bis zur nächsten Rast. Affinität aus dem Zerlegen verstärkt alle Effekte eines Typs. Verbrauchst du ein Typ-Item, zündet eine aktive Synergie dieses Typs zusätzlich.'),
     rows.length ? rows : h('div.hint', 'Noch keine Stacks.'), h('ul.fx', li('Synergien', 'h'), ...syn), h('div.btns', h('button.btn', { onclick: closeSheet }, 'Schließen')));
 }
 

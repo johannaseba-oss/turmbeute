@@ -241,7 +241,7 @@ export function useEffect(inst) {
   const def = itemDef(inst.id);
   if (def.use) return def.use;
   if (def.kind === 'ball' || def.kind === 'treasure' || def.kind === 'fragment') return null;
-  if (def.stacks) return { burst: 1.5, floorStacks: 2, text: 'Typ-Entladung und +2 Stacks für den Floor' };
+  if (def.stacks) return { burst: 1.5, floorStacks: 2, text: 'Typ-Entladung und +2 Stacks bis zur nächsten Rast' };
   if (def.equip) return { buffs: def.equip.map((o) => ({ ...o, v: o.v * 2 })), text: 'Überladen: doppelte Wirkung für den Kampf' };
   return null;
 }
@@ -309,7 +309,7 @@ async function useMon(idx, stats, mods) {
   await strike(target(), move, { stats: own.stats, mods: own.mods, who: m, label: `${sp.name}: ${mv.name}`, statusBonus: TYPE_STATUS[mv.type] });
   return true;
 }
-// Pokémon opfern: massiver Floor-Boost, permanente Affinität
+// Pokémon opfern: massiver Boost bis zur Rast, permanente Affinität
 async function sacrifice(idx, mods) {
   if (run.team.length <= 1) return false;
   const S = D.B.sacrifice, mult = 1 + g(mods, 'monUsePct');

@@ -1,5 +1,5 @@
 {
- "_hinweis": "Items. rarity 1–5. kind: held/gem/stone/berry/potion/ball/tm/candy/fragment/treasure. stacks = Typ-Stacks solange angelegt. equip = Ops solange angelegt (wirken nur für das tragende Pokémon, außer gold/catch/lootExtra/salvage/shop…) (hp/atk/def/spa/spd/spe skalieren mit Item-Stufe). use = Verbrauchen im Kampf (heal = Anteil max. KP, buffs = Ops für den Kampf, floorStacks = Typ-Stacks für den Floor, burst = Typ-Entladung Stärke, attack = Attacke). trigger = löst angelegt automatisch aus (lowHp/status). salvage = permanente Punkte beim Zerlegen (all = alle Werte, aff = Affinität für die Typen des Items, gold = Gold-Bonus). weight = Drop-Häufigkeit, minFloor = frühester Floor.",
+ "_hinweis": "Items. rarity 1–5. kind: held/gem/stone/berry/potion/ball/tm/candy/fragment/treasure. stacks = Typ-Stacks solange angelegt. equip = Ops solange angelegt (wirken nur für das tragende Pokémon, außer gold/catch/lootExtra/salvage/shop…) (hp/atk/def/spa/spd/spe skalieren mit Item-Stufe). use = Verbrauchen im Kampf (heal = Anteil max. KP, buffs = Ops für den Kampf, floorStacks = Typ-Stacks bis zur nächsten Rast, burst = Typ-Entladung Stärke, attack = Attacke). trigger = löst angelegt automatisch aus (lowHp/status). salvage = permanente Punkte beim Zerlegen (all = alle Werte, aff = Affinität für die Typen des Items, gold = Gold-Bonus). weight = Drop-Häufigkeit, minFloor = frühester Kampf (insgesamt gezählt).",
  "items": [
   {
    "id": "silk-scarf",
@@ -470,7 +470,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Normal-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Normal-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "hp": 1
@@ -495,7 +495,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Feuer-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Feuer-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "spa": 1
@@ -520,7 +520,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Wasser-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Wasser-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "spd": 1
@@ -545,7 +545,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Elektro-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Elektro-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "spe": 1
@@ -570,7 +570,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Pflanze-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Pflanze-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "hp": 1
@@ -595,7 +595,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Eis-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Eis-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "spa": 1
@@ -620,7 +620,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Kampf-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Kampf-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "atk": 1
@@ -645,7 +645,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Gift-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Gift-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "atk": 1
@@ -670,7 +670,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Boden-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Boden-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "def": 1
@@ -695,7 +695,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Flug-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Flug-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "spe": 1
@@ -720,7 +720,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Psycho-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Psycho-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "spa": 1
@@ -745,7 +745,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Käfer-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Käfer-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "atk": 1
@@ -770,7 +770,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Gestein-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Gestein-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "def": 1
@@ -795,7 +795,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Geist-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Geist-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "spa": 1
@@ -820,7 +820,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Drache-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Drache-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "atk": 1
@@ -845,7 +845,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Unlicht-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Unlicht-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "atk": 1
@@ -870,7 +870,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Stahl-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Stahl-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "def": 1
@@ -895,7 +895,7 @@
    "use": {
     "floorStacks": 4,
     "burst": 1.2,
-    "text": "+4 Fee-Stacks für diesen Floor und Typ-Entladung"
+    "text": "+4 Fee-Stacks bis zur nächsten Rast und Typ-Entladung"
    },
    "salvage": {
     "spd": 1
@@ -908,7 +908,7 @@
    "rarity": 3,
    "icon": "fire-stone",
    "weight": 2.5,
-   "minFloor": 3,
+   "minFloor": 6,
    "stone": "fire-stone",
    "stacks": {
     "Feuer": 3
@@ -934,7 +934,7 @@
    "rarity": 3,
    "icon": "water-stone",
    "weight": 2.5,
-   "minFloor": 3,
+   "minFloor": 6,
    "stone": "water-stone",
    "stacks": {
     "Wasser": 3
@@ -960,7 +960,7 @@
    "rarity": 3,
    "icon": "thunder-stone",
    "weight": 2.5,
-   "minFloor": 3,
+   "minFloor": 6,
    "stone": "thunder-stone",
    "stacks": {
     "Elektro": 3
@@ -986,7 +986,7 @@
    "rarity": 3,
    "icon": "leaf-stone",
    "weight": 2.5,
-   "minFloor": 3,
+   "minFloor": 6,
    "stone": "leaf-stone",
    "stacks": {
     "Pflanze": 3
@@ -1012,7 +1012,7 @@
    "rarity": 3,
    "icon": "ice-stone",
    "weight": 2.5,
-   "minFloor": 3,
+   "minFloor": 6,
    "stone": "ice-stone",
    "stacks": {
     "Eis": 3
@@ -1038,7 +1038,7 @@
    "rarity": 3,
    "icon": "moon-stone",
    "weight": 2.5,
-   "minFloor": 3,
+   "minFloor": 6,
    "stone": "moon-stone",
    "stacks": {
     "Fee": 2,
@@ -1065,7 +1065,7 @@
    "rarity": 3,
    "icon": "sun-stone",
    "weight": 2.5,
-   "minFloor": 3,
+   "minFloor": 6,
    "stone": "sun-stone",
    "stacks": {
     "Feuer": 2,
@@ -1092,7 +1092,7 @@
    "rarity": 3,
    "icon": "dusk-stone",
    "weight": 2.5,
-   "minFloor": 3,
+   "minFloor": 6,
    "stone": "dusk-stone",
    "stacks": {
     "Unlicht": 2,
@@ -1119,7 +1119,7 @@
    "rarity": 3,
    "icon": "dawn-stone",
    "weight": 2.5,
-   "minFloor": 3,
+   "minFloor": 6,
    "stone": "dawn-stone",
    "stacks": {
     "Psycho": 2,
@@ -1146,7 +1146,7 @@
    "rarity": 3,
    "icon": "shiny-stone",
    "weight": 2.5,
-   "minFloor": 3,
+   "minFloor": 6,
    "stone": "shiny-stone",
    "stacks": {
     "Fee": 2,
@@ -1257,7 +1257,7 @@
    "rarity": 4,
    "icon": "life-orb",
    "weight": 1.5,
-   "minFloor": 4,
+   "minFloor": 8,
    "equip": [
     {
      "op": "dmgPct",
@@ -1474,7 +1474,7 @@
    "rarity": 3,
    "icon": "toxic-orb",
    "weight": 2,
-   "minFloor": 3,
+   "minFloor": 6,
    "stacks": {
     "Gift": 4
    },
@@ -1501,7 +1501,7 @@
    "rarity": 3,
    "icon": "flame-orb",
    "weight": 2,
-   "minFloor": 3,
+   "minFloor": 6,
    "stacks": {
     "Feuer": 4
    },
@@ -1528,7 +1528,7 @@
    "rarity": 3,
    "icon": "tide-orb",
    "weight": 2,
-   "minFloor": 3,
+   "minFloor": 6,
    "stacks": {
     "Wasser": 3
    },
@@ -1554,7 +1554,7 @@
    "rarity": 4,
    "icon": "prism-orb",
    "weight": 1,
-   "minFloor": 6,
+   "minFloor": 12,
    "equip": [
     {
      "op": "allStacks",
@@ -1848,7 +1848,7 @@
    "rarity": 4,
    "icon": "comet-shard",
    "weight": 0.8,
-   "minFloor": 5,
+   "minFloor": 10,
    "salvage": {
     "all": 5
    },
@@ -1994,7 +1994,7 @@
    "rarity": 3,
    "weight": 2,
    "stack": 5,
-   "minFloor": 5,
+   "minFloor": 10,
    "use": {
     "heal": 1
    },
@@ -2127,7 +2127,7 @@
    "kind": "fragment",
    "rarity": 3,
    "weight": 1,
-   "minFloor": 4,
+   "minFloor": 8,
    "stack": 3,
    "desc": "3 Fragmente ergeben automatisch einen Meisterball.",
    "salvage": {
@@ -2172,7 +2172,7 @@
    "rarity": 3,
    "weight": 3,
    "stack": 10,
-   "minFloor": 6,
+   "minFloor": 12,
    "catch": {
     "mult": 2
    },
@@ -2349,7 +2349,7 @@
    "salvage": {
     "gold": 1
    },
-   "desc": "Je schwächer (früher) das Pokémon, desto besser – stark auf frühen Floors.",
+   "desc": "Je schwächer (früher) das Pokémon, desto besser – stark in frühen Kämpfen.",
    "icon": "nestball"
   },
   {
@@ -2426,7 +2426,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Normal": 1
    },
@@ -2463,7 +2463,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Feuer": 1
    },
@@ -2501,7 +2501,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Wasser": 1
    },
@@ -2538,7 +2538,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Elektro": 1
    },
@@ -2576,7 +2576,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Pflanze": 1
    },
@@ -2613,7 +2613,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Eis": 1
    },
@@ -2651,7 +2651,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Kampf": 1
    },
@@ -2688,7 +2688,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Gift": 1
    },
@@ -2726,7 +2726,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Boden": 1
    },
@@ -2763,7 +2763,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Flug": 1
    },
@@ -2800,7 +2800,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Psycho": 1
    },
@@ -2838,7 +2838,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Käfer": 1
    },
@@ -2875,7 +2875,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Gestein": 1
    },
@@ -2912,7 +2912,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Geist": 1
    },
@@ -2950,7 +2950,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Drache": 1
    },
@@ -2987,7 +2987,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Unlicht": 1
    },
@@ -3024,7 +3024,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Stahl": 1
    },
@@ -3061,7 +3061,7 @@
    "kind": "tm",
    "rarity": 2,
    "weight": 2.5,
-   "minFloor": 2,
+   "minFloor": 4,
    "stacks": {
     "Fee": 1
    },
@@ -3112,7 +3112,7 @@
    "rarity": 4,
    "icon": "big-nugget",
    "weight": 0.8,
-   "minFloor": 6,
+   "minFloor": 12,
    "salvage": {
     "gold": 4
    },
@@ -3235,7 +3235,7 @@
    "rarity": 3,
    "icon": "ep-teiler",
    "weight": 0.8,
-   "minFloor": 6,
+   "minFloor": 12,
    "desc": "Solange du ihn besitzt (im Inventar oder an einem Pokémon), bekommen alle Team-Pokémon, die nicht gekämpft haben, die Hälfte der EP.",
    "salvage": {
     "all": 1

@@ -135,6 +135,9 @@ export function equip(invIdx, monIdx, replace = null) {
     const ev = mon(m.dex).evos.find((e) => e.stone === def.stone);
     if (ev && !noEvolve(m)) { takeOne(invIdx); evolve(m, ev.to); return 'evolved'; }
   }
+  // Trägt das Pokémon dasselbe Item schon, wird aufgewertet statt ein Platz belegt
+  const same = m.held.findIndex((x) => x.id === inst.id);
+  if (same >= 0 && canMergeKind(inst)) { mergeInto(takeOne(invIdx), { mon: monIdx, slot: same }); return 'merged'; }
   const before = monMax(m);
   if (m.held.length >= heldSlots(run)) {
     if (replace == null) return 'full';
@@ -146,6 +149,30 @@ export function equip(invIdx, monIdx, replace = null) {
   fixHp(m);
   return 'ok';
 }
+// --- Aufwerten: ein zweites gleiches Item auf das vorhandene ziehen ---
+// Gleiche Seltenheit → eine Stufe seltener (max. Legendär); dazu immer +1 Item-Stufe
+export const canMergeKind = (inst) => ['held', 'gem', 'tm'].includes(itemDef(inst.id).kind);
+export function mergeResult(src, dst) {
+  const a = dst.r || 1, b = src.r || 1;
+  return { r: a === b ? Math.min(5, a + 1) : Math.max(a, b), lvl: Math.max(dst.lvl || 1, src.lvl || 1) + 1 };
+}
+// Gleiche Items im Inventar oder an Pokémon, auf die inst gezogen werden kann
+export function mergeTargets(inst, skipInv = -1) {
+  if (!inst || !canMergeKind(inst)) return [];
+  const out = [];
+  run.inv.forEach((x, j) => { if (x && j !== skipInv && x !== inst && x.id === inst.id) out.push({ inv: j, item: x }); });
+  run.team.forEach((m, i) => m.held.forEach((x, k) => { if (x !== inst && x.id === inst.id) out.push({ mon: i, slot: k, item: x }); }));
+  return out;
+}
+export const refItem = (ref) => (ref.inv != null ? run.inv[ref.inv] : run.team[ref.mon]?.held[ref.slot]);
+export function mergeInto(src, ref) {
+  const dst = refItem(ref), m = ref.mon != null ? run.team[ref.mon] : null;
+  const before = m ? monMax(m) : 0;
+  Object.assign(dst, mergeResult(src, dst));
+  if (m) { m.hp += Math.max(0, monMax(m) - before); fixHp(m); }
+  return dst;
+}
+
 export function unequip(monIdx, slot) {
   if (freeSlots() <= 0) return false;
   const m = run.team[monIdx];

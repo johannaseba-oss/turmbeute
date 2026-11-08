@@ -201,3 +201,27 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; }
 .energyrow { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--muted); }
 .energyrow .elabel { color: var(--energy); font-weight: 700; }
 .energyrow .energy i.need { border-color: #a890ff; }
+
+/* Hover-Tooltip */
+.tip { position: fixed; z-index: 80; width: 280px; max-width: calc(100vw - 16px); background: #1c1830f5; border: 1px solid #6a5ad0; border-radius: 10px; padding: 10px 12px; pointer-events: none; box-shadow: 0 8px 24px #0009; font-size: 13px; }
+.tip .sh-head { margin-bottom: 4px; }
+.tip .sh-head .big { width: 44px; height: 44px; }
+.tip .sh-head h3 { font-size: 16px; }
+.tip .fx { margin: 2px 0; font-size: 12.5px; }
+.tipx { color: var(--gold); font-weight: 700; font-size: 12px; }
+.tipup, .tip .upline { color: #c8a0ff; font-weight: 700; font-size: 12px; margin-top: 4px; }
+
+/* ↑ = aufwertbar (gleiches Item vorhanden) */
+.upb { position: absolute; right: 3px; top: 1px; font-size: 13px; font-weight: 700; color: #c8a0ff; text-shadow: 0 0 4px #7a4ad8, 0 1px 0 #000; z-index: 2; }
+.card { position: relative; }
+.card .upb { right: 6px; top: 4px; font-size: 15px; }
+
+/* Anführer-Leiste leuchtet bei Heilung / Schaden kurz auf */
+#player.fl-heal { animation: flHeal .65s ease-out; }
+#player.fl-dmg { animation: flDmg .5s ease-out; }
+#player.fl-poison { animation: flPoison .6s ease-out; }
+#player.fl-burn { animation: flBurn .6s ease-out; }
+@keyframes flHeal { 0% { box-shadow: 0 0 0 2px #7cff8a, 0 0 18px #7cff8a; border-color: #7cff8a; } 100% { box-shadow: none; } }
+@keyframes flDmg { 0% { box-shadow: 0 0 0 2px #ff5a6a, 0 0 14px #ff5a6a; transform: translateX(-3px); } 25% { transform: translateX(3px); } 50% { transform: translateX(-2px); } 100% { box-shadow: none; transform: none; } }
+@keyframes flPoison { 0% { box-shadow: 0 0 0 2px #d58aff, 0 0 16px #b050f0; } 100% { box-shadow: none; } }
+@keyframes flBurn { 0% { box-shadow: 0 0 0 2px #ffa040, 0 0 16px #ff7020; } 100% { box-shadow: none; } }

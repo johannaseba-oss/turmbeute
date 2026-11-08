@@ -1,5 +1,5 @@
 {
-  "_hinweis": "Typ-Stacks. Quellen: Team-Pokémon (Haupttyp mainType, Zweittyp subType Stacks), angelegte Items (stacks), Floor-Boni. per = Effekt je Stack (wird mit Typ-Affinität verstärkt: +affinityPct je Punkt). tiers = Schwellen ab 'at' Stacks. Ops siehe src/mods.js (OPS).",
+  "_hinweis": "Typ-Stacks. Quellen: Team-Pokémon (Haupttyp mainType, Zweittyp subType Stacks), angelegte Items (stacks), Rast-Boni. per = Effekt je Stack (wird mit Typ-Affinität verstärkt: +affinityPct je Punkt). tiers = Schwellen ab 'at' Stacks. Ops siehe src/mods.js (OPS).",
   "mainType": 2,
   "subType": 1,
   "affinityPct": 0.12,

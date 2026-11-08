@@ -9,9 +9,12 @@ import { $, h, fmt } from './dom.js';
 import { G } from '../game.js';
 import { itemSheet, monSheet, stacksSheet, statsSheet } from './sheets.js';
 import { startDrag } from './drag.js';
+import { attachTip, hideTip } from './tip.js';
+import { itemTip } from './sheets.js';
 
 export function renderHud() {
   if (!run) return;
+  hideTip();
   ensureInv();
   const { stats, mods, stacks, active } = computeStats(run, B()?.buffs || []);
   const b = B();
@@ -82,7 +85,10 @@ export function renderTeam() {
       h('div.types', ...sp.types.map((t) => h('i', { style: { background: typeColor(t) } }))),
       h('div.helds', ...Array.from({ length: slotsN }, (_, k) => {
         const it = heldOf(m)[k];
-        return it ? h('i', { style: { '--rc': rarityColor(it.r) } }, h('img', { src: itemIconUrl(it.id) })) : h('i.free');
+        if (!it) return h('i.free');
+        const el = h('i', { style: { '--rc': rarityColor(it.r) } }, h('img', { src: itemIconUrl(it.id) }));
+        attachTip(el, () => itemTip(it));
+        return el;
       })),
       h('div.mhp', h('i', { style: { width: (m.hp / max) * 100 + '%' } })));
     slots.push(el);
@@ -107,6 +113,8 @@ export function renderBag() {
     if (inst) {
       const def = itemDef(inst.id);
       if (inBattle && def.kind === 'ball') el.classList.add('can');
+      if (R.mergeTargets(inst, i).length) el.append(h('span.upb', '↑'));
+      attachTip(el, () => itemTip(inst));
       el.onclick = () => { if (!el._dragged) itemSheet(i); };
       el.onpointerdown = (ev) => { if (!inBattle) startDrag(ev, el, i); };
     }
