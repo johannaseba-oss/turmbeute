@@ -2,7 +2,7 @@
 // Ohne Oberfläche (Bot-Test) ist fx ein No-op.
 import { D, mon, itemDef, typeEff, rnd, ri, clamp, pick } from './data.js';
 import { computeStats, g, opText, heldOf } from './mods.js';
-import { run, makeMon, addMon, takeOne, save, lead, fixHp, ensureLeadAble } from './run.js';
+import { run, makeMon, addMon, takeOne, save, lead, fixHp, ensureLeadAble, reviveMon } from './run.js';
 
 let fx = async () => {};
 export const setFx = (f) => (fx = f);
@@ -213,7 +213,8 @@ async function doAction(action, arg) {
     await fx({ kind: 'say', text: 'Durchatmen …' });
     await heal(stats.hp * C().waitHeal, mods, 'Warten');
     b.energy = Math.min(D.B.energy.max, b.energy + C().waitEnergy);
-  } else if (action === 'item') return useItem(arg.idx, stats, mods);
+  } else if (action === 'item') return useItem(arg.idx, stats, mods, arg);
+  else if (action === 'area') return areaAttack(stats, mods);
   else if (action === 'ball') return throwBall(arg.idx, stats, mods);
   else if (action === 'mon') return useMon(arg.idx, stats, mods);
   else if (action === 'sacrifice') return sacrifice(arg.idx, mods);
@@ -245,11 +246,34 @@ export function useEffect(inst) {
   if (def.equip) return { buffs: def.equip.map((o) => ({ ...o, v: o.v * 2 })), text: 'Überladen: doppelte Wirkung für den Kampf' };
   return null;
 }
-async function useItem(idx, stats, mods) {
+// Flächenangriff: Spezial-Typ des Anführers auf alle Gegner, schwächer als Einzel-Spezial
+async function areaAttack(stats, mods) {
+  const b = B(), cost = areaCost();
+  if (b.energy < cost) return false;
+  b.energy -= cost;
+  const mv = leadMoves().special;
+  const move = { ...mv, name: 'Rundumschlag', power: mv.power * C().areaMult * (1 + g(mods, 'specialPct')) };
+  await fx({ kind: 'pattack', move, special: true });
+  await fx({ kind: 'aoe', type: move.type });
+  for (const [i, e] of alive().entries()) await strike(e, move, { stats, mods, label: i ? null : 'Rundumschlag', secondary: i > 0 });
+  return true;
+}
+export const areaCost = () => Math.max(1, specialCost() + D.B.energy.areaExtra);
+
+async function useItem(idx, stats, mods, arg = {}) {
   const inst = run.inv[idx];
   const def = itemDef(inst.id);
   const u = useEffect(inst);
   if (!u || def.restOnly) return false;
+  if (u.revive) {
+    const m = run.team[arg.mon];
+    if (!m?.fainted) return false;
+    takeOne(idx);
+    await fx({ kind: 'use', inst });
+    reviveMon(m, u.revive);
+    await fx({ kind: 'revive', m });
+    return true;
+  }
   takeOne(idx);
   await fx({ kind: 'use', inst });
   await applyUse(inst, u, stats, mods);
@@ -362,7 +386,7 @@ async function throwBall(idx, stats, mods) {
     run.stats.caught++;
     e.hp = 0; e.caught = true;
     const cb = itemDef(inst.id).catch;
-    const nm = makeMon(e.dex, e.level);
+    const nm = makeMon(e.dex, e.level, e.ivs);
     if (cb.heal) await heal(stats.hp * cb.heal, mods, 'Heilball');
     if (cb.gold) run.gold += cb.gold;
     if (!addMon(nm)) B().caught.push(nm);

@@ -12,13 +12,15 @@
     "pokeball",
     "trank",
     "trank",
-    "sinelbeere"
+    "sinelbeere",
+    "beleber"
   ],
   "energy": {
     "start": 1,
     "perTurn": 1,
     "max": 5,
-    "specialCost": 2
+    "specialCost": 2,
+    "areaExtra": 1
   },
   "combat": {
     "attackMult": 1,
@@ -45,7 +47,8 @@
     "confuseSelfHit": 0.33,
     "statusDmgMult": 1,
     "basePower": 50,
-    "enemyDmg": 0.7
+    "enemyDmg": 0.7,
+    "areaMult": 0.65
   },
   "sacrifice": {
     "floorAllPct": 0.35,
@@ -54,13 +57,19 @@
     "healPct": 0.5
   },
   "floor": {
-    "twoEnemiesFrom": 9,
-    "twoEnemiesChance": 0.2,
-    "threeEnemiesFromAreal": 2,
-    "threeEnemiesChance": 0.15,
+    "twoEnemiesFrom": 3,
+    "twoEnemiesChance": 0.35,
+    "threeEnemiesChance": 0.2,
     "eliteChance": 0.1,
     "healAfterFloor": 1,
-    "healAfterFight": 0.3
+    "healAfterFight": 0.3,
+    "threeEnemiesFrom": 7,
+    "groupMult": [
+      1,
+      0.75,
+      0.6
+    ],
+    "_hinweis": "Gegnerzahl je wildem Kampf: ab twoEnemiesFrom (im 1. Areal) Chance auf 2, ab threeEnemiesFrom auf 3; in späteren Arealen immer möglich. groupMult = KP/Angriff je Gegner bei 1/2/3 Gegnern."
   },
   "enemy": {
     "_hinweis": "Gegner-Level = levelBase + (Kampf insgesamt-1)·levelPerFight (+0–1). Werte nach Pokémon-Formel × growExp^(Kampf-1) × early/elite/legend.",
@@ -210,6 +219,11 @@
         "price": 45,
         "minFloor": 3,
         "once": true
+      },
+      {
+        "id": "beleber",
+        "price": 30,
+        "minFloor": 3
       }
     ]
   },

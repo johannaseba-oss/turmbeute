@@ -1,4 +1,6 @@
-# Turmbeute
+# PokeLoot
+
+(Projektordner und Repo heißen weiterhin „Turmbeute“.)
 
 Privates Inventory-Roguelike im Browser (Handy hochkant): einen endlosen Turm aus Pokémon-Kämpfen erklimmen. Der Kampf ist simpel, die Tiefe steckt in Beute, Typ-Stacks und Team.
 
@@ -18,7 +20,7 @@ Läuft auf `http://localhost:5198`. Durch `--host` ist es auch im WLAN erreichba
 1. Im Titel einen von 3 Speicherplätzen wählen (jeder ist ein eigener Lauf, jederzeit fortsetzbar; Menü → Speichern & zum Titel). Neuer Lauf: Spielautomat zieht 3 zufällige Basis-Pokémon auf Lv 1 (1× nochmal drehen).
 2. Ein Areal hat 15 Kämpfe: 1–13 wilde Pokémon (im 1. Areal erst Nager, kleine Vögel, Käfer, dann stärkere), 14 ein Trainer-Endboss mit Themen-Team eines Typs (Areal 1: 2 Pokémon, jedes Areal eins mehr bis 6, nacheinander, nicht fangbar), 15 ein Legendäres passend zum Level. Danach das nächste, stärkere Areal.
 3. Nach jedem Kampf Beute (nehmen oder sofort zerlegen), gefangene Pokémon aufnehmen/tauschen.
-4. Rast nach Kampf 5, 10, 13 und am Areal-Ende: alle geheilt und wiederbelebt, Shop (grün = bezahlbar, rot = zu teuer), am Areal-Ende ein Keystone. Verkaufen geht außerhalb des Kampfes jederzeit.
+4. Rast nach Kampf 5, 10, 13 und am Areal-Ende: alle geheilt (besiegte Pokémon nur mit Beleber/Top-Beleber zurück, oder aus dem Team entfernen), Shop (grün = bezahlbar, rot = zu teuer), am Areal-Ende ein Keystone. Verkaufen geht außerhalb des Kampfes jederzeit.
 
 Team: Der Anführer kämpft allein mit seinen eigenen Werten (Pokémon-Formel nach Level) und bis zu 4 Items. Wird er K.O., kommt das nächste Pokémon; verloren ist erst, wenn alle besiegt sind. Besiegte Gegner geben EP an den Kämpfer; mit dem Item EP-Teiler (Shop oder erster Trainer-Sieg) bekommen die anderen die Hälfte, Level ohne Obergrenze, Entwicklungen nach Level oder Stein. Typ-Stacks und Fähigkeiten aller Team-Pokémon gelten fürs ganze Team, Item-Effekte nur für den Träger (außer Gold/Fangen/Shop-Boni).
 
@@ -26,7 +28,9 @@ Kampf-Hintergründe sind so zugeschnitten, dass die Pokémon auf der Bodenfläch
 
 Energie: Zeile über den Kampf-Knöpfen; +1 pro Runde (Warten +1 extra), Spezial kostet sie.
 
-Kampfaktionen: Angriff (neutral), Spezial (Typ des Anführers, kostet Energie), Warten, Item verbrauchen, Ball werfen, Pokémon einsetzen (starke Attacke, danach bis zum nächsten Floor erschöpft) oder opfern (Floor-Boost + permanente Affinität). Gegner antippen = anvisieren; über jedem Gegner steht seine nächste Absicht.
+Wilde Kämpfe haben zufällig 1–3 Gegner (in Gruppen etwas schwächer). Über jedem Gegner: ▲ höchster und ▼ niedrigster Kampfwert (Ang/Abw/Sp.Ang/Sp.Abw), ohne Zahlen. Jedes Pokémon hat individuelle Werte (IVs 0–31), gefangene behalten sie.
+
+Kampfaktionen: Angriff (neutral), Spezial (Typ des Anführers, kostet Energie), Rundumschlag (Spezial-Typ auf alle Gegner, kostet mehr Energie), Warten, Item verbrauchen, Ball werfen, Pokémon einsetzen (starke Attacke, danach bis zum nächsten Floor erschöpft) oder opfern (Floor-Boost + permanente Affinität). Gegner antippen = anvisieren; über jedem Gegner steht seine nächste Absicht.
 
 Aufwerten: Ein zweites gleiches Item (Haltegegenstand, Typ-Tafel, TM) auf das vorhandene ziehen – im Inventar oder auf das Pokémon, das es trägt. Gleiche Seltenheit wird eine Stufe seltener (bis Legendär), dazu immer +1 Item-Stufe. ↑ markiert Items, die du aufwerten kannst. Mit der Maus zeigt Überfahren alle Effekte als Tooltip; auf dem Handy öffnet Antippen die Details.
 

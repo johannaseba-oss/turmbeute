@@ -242,3 +242,7 @@ b.plus, b.minus { font-weight: 700; }
 .saveslot .sl-row { display: flex; gap: 6px; }
 .saveslot .sl-row .btn { flex: 1; padding: 9px; }
 .saveslot .hint { margin: 0; }
+
+/* Rundumschlag */
+#actions .area { background: linear-gradient(#d07a3a, #8a4a1a); border-color: #ffb070; }
+#actions .actrow button { min-width: 0; }

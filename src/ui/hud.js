@@ -3,7 +3,7 @@ import { D, mon, itemDef, portraitUrl, itemIconUrl, typeColor, rarityColor } fro
 import { computeStats, g, heldOf, heldSlots, expFor } from '../mods.js';
 import { run, ensureInv, fixHp } from '../run.js';
 import * as R from '../run.js';
-import { B, specialCost, leadMoves, alive } from '../combat.js';
+import { B, specialCost, leadMoves, alive, areaCost } from '../combat.js';
 import { STATUS_ICON } from '../gfx/stage.js';
 import { $, h, fmt } from './dom.js';
 import { G } from '../game.js';
@@ -64,11 +64,12 @@ function renderActions(b) {
   a.replaceChildren(
     h('div.energyrow', h('span.elabel', 'Energie'),
       h('div.energy', ...Array.from({ length: max }, (_, i) => h('i', { class: (i < b.energy ? 'on' : '') + (i < cost ? ' need' : '') }))),
-      h('span.etext', `${b.energy}/${max} · +${gain} pro Runde · Spezial kostet ${cost}`)),
+      h('span.etext', `${b.energy}/${max} · +${gain} pro Runde · Spezial ${cost}, Rundum ${areaCost()}`)),
     h('div.actrow',
       h('button', { onclick: () => G.act('wait'), disabled: busy }, 'Warten', h('small', '+1 Energie, Heilung')),
       h('button.main', { onclick: () => G.act('attack'), disabled: busy }, '⚔ Angriff', h('small', { style: { color: '#e8ffe8' } }, 'kostenlos')),
-      h('button.spec', { onclick: () => G.act('special'), disabled: busy || b.energy < cost }, mv.special.name, h('small', { style: { color: '#e0d8ff' } }, `${mv.special.type} · ${cost} Energie`))),
+      h('button.spec', { onclick: () => G.act('special'), disabled: busy || b.energy < cost }, mv.special.name, h('small', { style: { color: '#e0d8ff' } }, `${mv.special.type} · ${cost} Energie`)),
+      h('button.area', { onclick: () => G.act('area'), disabled: busy || b.energy < areaCost() }, 'Rundum', h('small', { style: { color: '#ffe0c0' } }, `alle · ${areaCost()} Energie`))),
   );
 }
 

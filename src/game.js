@@ -65,6 +65,7 @@ async function fx(ev) {
       return W(ev.small ? 150 : 320);
     }
     case 'aoe': stage.aoe(ev.type); blip(60, 0.25, 'sawtooth', 0.07); navigator.vibrate?.(30); return stage.wait(320);
+    case 'revive': stage.text('player', `${mon(ev.m.dex).name} ist zurück!`, '#7cff8a', 13, 40); flashHud('heal'); renderHud(); return W(400);
     case 'miss': stage.text('player', 'Ausgewichen!', '#8ac8ff', 13); return W(260);
     case 'shield': stage.text('player', '🛡 ' + ev.v, '#8ac8ff', 14); renderHud(); return W(200);
     case 'shieldhit': stage.text('player', '🛡-' + ev.v, '#8ac8ff', 12, 50); return W(100);
@@ -84,7 +85,7 @@ async function fx(ev) {
     case 'sacrifice': stage.vfx('player', 'level_up_burst', 2.2, 12); sfx('fp_rang', 0.5); await banner(`${mon(ev.m.dex).name} geopfert`, 'Die Kraft geht auf dein Team über', 1100); renderHud(); return;
     case 'ball': sfx('ballfall', 0.5); log(itemDef(ev.inst.id).name + '!'); await stage.throwBall(ev.inst.id, ev.e.uid, ev.shakes, ev.ok); return;
     case 'caught': sfx('fp_rang', 0.6); await banner(`${ev.e.name} gefangen!`, ev.full ? 'Team voll – entscheide nach dem Kampf' : 'Neu im Team', 1100); renderHud(); return;
-    case 'faint': sfx('fp_fehler', 0.4); await stage.ko('player'); log(`${mon(ev.m.dex).name} ist besiegt!`); await stage.wait(400); return;
+    case 'faint': sfx('fp_fehler', 0.4); await stage.ko('player'); log(`${mon(ev.m.dex).name} ist besiegt – Beleber oder aus dem Team entfernen`); await stage.wait(400); return;
     case 'swap': stage.setScene(run.team[0].dex, standing()); renderHud(); return W(250);
     case 'say': log(ev.text); return W(380);
     case 'update': stage.setScene(run.team[0].dex, standing()); refreshIntents(); renderHud(); return;
@@ -129,7 +130,7 @@ export const G = {
           h('button.btn.warn', { onclick: (e) => { if (e.currentTarget.dataset.sure) { R.clearSave(n); G.title(); } else { e.currentTarget.dataset.sure = 1; e.currentTarget.textContent = 'Wirklich löschen?'; } } }, 'Löschen')));
     };
     ov.replaceChildren(
-      h('div.title', 'TURMBEUTE'),
+      h('div.title', 'POKELOOT'),
       h('div.subtitle', 'Erklimme den endlosen Turm. Fange, sammle, zerlege – und bau dir den absurdesten Build.'),
       h('div.menu',
         ...Array.from({ length: R.SLOTS }, (_, n) => slot(n)),
@@ -278,7 +279,7 @@ export const G = {
   },
   floorEnd() {
     run.floorOps = []; run.floorStacks = {};
-    R.healTeam(D.B.floor.healAfterFloor, true);
+    R.healTeam(D.B.floor.healAfterFloor);
     R.makeShop();
     const ks = run.fight >= D.B.areal.fights; // Areal geschafft
     run.phase = ks ? 'keystone' : 'rest';
@@ -292,7 +293,7 @@ export const G = {
     run.ksOffer = null;
     run.phase = 'rest';
     R.ensureInv();
-    R.healTeam(1, true);
+    R.healTeam(1);
     sfx('fp_rang', 0.5);
     G.refresh();
   },
@@ -322,6 +323,16 @@ export const G = {
     mergedFx(R.mergeInto(src, ref));
   },
   unequip(mi, slot) { if (!R.unequip(mi, slot)) return G.toastNo('Kein Platz im Inventar.'); G.refresh(); },
+  // Beleber außerhalb des Kampfes
+  reviveOn(idx, mi) {
+    const u = itemDef(run.inv[idx].id).use, m = run.team[mi];
+    if (!m.fainted) return;
+    R.takeOne(idx);
+    R.reviveMon(m, u.revive);
+    toast(`${mon(m.dex).name} ist wieder fit!`);
+    sfx('fp_rang', 0.5);
+    G.refresh();
+  },
   // Trank o. Ä. außerhalb des Kampfes auf ein Pokémon
   useOn(idx, mi) {
     const u = itemDef(run.inv[idx].id).use, m = run.team[mi];
@@ -465,7 +476,8 @@ function help() {
   openSheet(h('h3', 'So funktioniert’s'), h('ul.fx',
     h('li', 'Ein Areal hat 15 Kämpfe: erst wilde Pokémon (am Anfang Nager & Co., dann stärkere), Kampf 14 ein Trainer-Endboss mit Themen-Team, Kampf 15 ein Legendäres. Rast mit Heilung und Shop nach Kampf 5, 10 und 13, am Areal-Ende ein Keystone.'),
     h('li', 'Du startest mit 3 Pokémon auf Lv 1. Der Anführer (♛) kämpft mit seinen eigenen Werten und seinen bis zu 4 Items. Wird er besiegt, kommt das nächste. Alle geben Typ-Stacks und ihre Fähigkeit fürs Team.'),
-    h('li', 'Besiegte Gegner geben EP an den Kämpfer. Mit dem EP-Teiler (Shop oder erster Trainer-Sieg) bekommen die anderen die Hälfte. Level ohne Obergrenze, Entwicklungen wie im Original. In der Rast werden alle geheilt und wiederbelebt.'),
+    h('li', 'Besiegte Gegner geben EP an den Kämpfer. Mit dem EP-Teiler (Shop oder erster Trainer-Sieg) bekommen die anderen die Hälfte. Level ohne Obergrenze, Entwicklungen wie im Original. In der Rast wird geheilt; besiegte Pokémon kommen nur mit einem Beleber zurück (oder du entfernst sie aus dem Team).'),
+    h('li', 'Über jedem Gegner: ▲ sein höchster und ▼ sein niedrigster Kampfwert (Ang/Abw/Sp.Ang/Sp.Abw). Niedrige Abw → Angriff, niedrige Sp.Abw → Spezial. Rundumschlag trifft alle Gegner.'),
     h('li', 'Im Kampf: Angriff, Spezial (kostet Energie), Warten, ein Item verbrauchen, einen Ball werfen oder ein Pokémon einsetzen/opfern (Pokémon antippen).'),
     h('li', 'Fangen: je weniger KP und mit Status (Schlaf, Paralyse, Gift, Verbrennung), desto besser. Fehlwurf macht den Gegner wütend.'),
     h('li', 'Items: anlegen (an Pokémon oder Trainer-Plätze), im Kampf verbrauchen oder zerlegen für permanente Werte und Typ-Affinität. Ziehen & Ablegen geht auch.'),
@@ -558,7 +570,7 @@ function keystonePanel() {
 }
 function restPanel() {
   const S = run.shop;
-  return [h('div.ph', `Rast · Areal ${run.areal}, nach Kampf ${run.fight}`, h('small', 'Team geheilt')),
+  return [h('div.ph', `Rast · Areal ${run.areal}, nach Kampf ${run.fight}`, h('small', run.team.some((m) => m.fainted) ? 'geheilt · K.O. nur mit Beleber' : 'Team geheilt')),
     h('div.cards', S.offers.map((o, i) => { const p = R.itemPrice(o), can = run.gold >= p; return itemCard(o, h('div.pr', { class: 'pr ' + (can ? 'ok' : 'no') }, o.sold ? 'verkauft' : p + ' G'), () => shopSheet(i), can ? 'ok' : 'no', `Preis: ${p} Gold${can ? '' : ' – zu teuer'}`); })),
     h('div.rowbtns', h('button.btn.purple', { class: 'btn purple ' + (run.gold >= R.rerollCost() ? 'ok' : 'no'), onclick: () => G.reroll() }, `Neu würfeln`, h('small', R.rerollCost() + ' Gold'))),
     h('div.hint', 'Grün = kannst du dir leisten, rot = zu teuer. Inventar-Items antippen: Anlegen, Zerlegen oder Verkaufen.')];

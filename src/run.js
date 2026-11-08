@@ -1,6 +1,6 @@
 // Lauf-Zustand: Team, Inventar, Gold, permanente Werte, Floors, Beute, Shop, Zerlegen, Level & Entwicklung.
 import { D, mon, itemDef, ri, rnd, pick, weighted, uid, clamp } from './data.js';
-import { baseStats, invSize, heldSlots, keystoneOps, sumOps, g, computeStats, allOps, STATS, equipOps, expFor, heldOf } from './mods.js';
+import { baseStats, randomIvs, invSize, heldSlots, keystoneOps, sumOps, g, computeStats, allOps, STATS, equipOps, expFor, heldOf } from './mods.js';
 
 const SAVE = 'turmbeute.run.v3', META = 'turmbeute.meta.v1';
 // Bis zu 3 Läufe gleichzeitig, jeder in seinem Speicherplatz
@@ -89,8 +89,8 @@ export function takeOne(idx) {
 }
 
 // --- Team ------------------------------------------------------------------
-export function makeMon(dex, level) {
-  const m = { uid: uid(), dex, level, exp: expFor(mon(dex).growth, level), held: [], used: false, fainted: false, hp: null };
+export function makeMon(dex, level, ivs = randomIvs()) {
+  const m = { uid: uid(), dex, level, ivs, exp: expFor(mon(dex).growth, level), held: [], used: false, fainted: false, hp: null };
   return m;
 }
 export const monStats = (m, extra = []) => computeStats(run, extra, m).stats;
@@ -121,6 +121,14 @@ export function ensureLeadAble() {
   const i = run.team.findIndex((m) => !m.fainted);
   if (i > 0) run.team.unshift(...run.team.splice(i, 1));
 }
+// Beleber: besiegtes Pokémon mit frac seiner KP zurückholen
+export function reviveMon(m, frac) {
+  if (!m?.fainted) return false;
+  m.fainted = false;
+  m.hp = Math.max(1, Math.round(monMax(m) * frac));
+  return true;
+}
+export const reviveItems = () => run.inv.map((x, i) => [x, i]).filter(([x]) => x && itemDef(x.id).use?.revive);
 // Heilen: frac = Anteil der max. KP, revive = Besiegte wiederbeleben
 export function healTeam(frac, revive = false) {
   for (const m of run.team) {
@@ -138,7 +146,7 @@ export function canEquip(inst) {
 export function equip(invIdx, monIdx, replace = null) {
   const inst = run.inv[invIdx];
   const m = run.team[monIdx];
-  if (!inst || !m) return;
+  if (!inst || !m || !canEquip(inst)) return;
   const def = itemDef(inst.id);
   // Entwicklungsstein: entwickelt sofort, wenn passend
   if (def.kind === 'stone') {
@@ -287,7 +295,7 @@ export function enemyLevel(prog, add = 0) {
   const E = D.B.enemy;
   return Math.max(1, Math.round(E.levelBase + (prog - 1) * E.levelPerFight) + ri(0, 1) + add);
 }
-export function makeEnemy(prog, { kind = 'wild', elite = false, dex = null, sp = null, levelAdd = 0, mult = null } = {}) {
+export function makeEnemy(prog, { kind = 'wild', elite = false, dex = null, sp = null, levelAdd = 0, mult = null, group = 1 } = {}) {
   const E = D.B.enemy, W = D.B.spawn.rarityWeights;
   if (!sp) {
     const pool = kind === 'legend' ? legendPool(run.areal) : wildPool(run.areal, run.fight);
@@ -296,13 +304,15 @@ export function makeEnemy(prog, { kind = 'wild', elite = false, dex = null, sp =
   const level = enemyLevel(prog, levelAdd + (kind === 'legend' ? E.legend.level : 0));
   const bm = mult || (kind === 'legend' ? E.legend : { hp: 1, atk: 1, def: 1 });
   const k = E.statMult * Math.pow(E.growExp, prog - 1) * (elite ? E.eliteMult : 1) * (E.early[prog - 1] ?? 1);
-  const st = baseStats(sp.dex, level);
-  const hp = Math.max(1, Math.round(st.hp * k * E.hpMult * bm.hp));
+  const ivs = randomIvs();
+  const st = baseStats(sp.dex, level, ivs);
+  const gm = D.B.floor.groupMult[group - 1] ?? 1; // Gruppen: einzelne Gegner etwas schwächer
+  const hp = Math.max(1, Math.round(st.hp * k * E.hpMult * bm.hp * gm));
   return {
     uid: uid(), dex: sp.dex, name: sp.name, types: sp.types, level,
     hp, max: hp,
-    atk: Math.round(st.atk * k * bm.atk), def: Math.round(st.def * k * bm.def),
-    spa: Math.round(st.spa * k * bm.atk), spd: Math.round(st.spd * k * bm.def),
+    atk: Math.round(st.atk * k * bm.atk * gm), def: Math.round(st.def * k * bm.def),
+    spa: Math.round(st.spa * k * bm.atk * gm), spd: Math.round(st.spd * k * bm.def), ivs,
     spe: st.spe, move: sp.move, boss: kind === 'legend', trainer: kind === 'trainer', elite,
     st: {}, defDown: 0, buff: 0, guard: 0, anger: 0, flinch: false,
     pattern: patternFor(sp, kind === 'legend'), pi: 0,
@@ -321,12 +331,14 @@ export function makeFightEnemies() {
   const F = D.B.floor, prog = run.floor, kind = fightKind();
   if (kind === 'legend') return { enemies: [makeEnemy(prog, { kind })] };
   if (kind === 'trainer') return makeTrainer(prog);
+  // Zufällig 1–3 Gegner (ab bestimmten Kämpfen im 1. Areal, danach immer möglich)
   let n = 1;
-  const late = run.areal > 1 || run.fight >= F.twoEnemiesFrom;
-  if (late && run.areal >= F.threeEnemiesFromAreal && rnd() < F.threeEnemiesChance) n = 3;
-  else if (late && rnd() < F.twoEnemiesChance) n = 2;
+  const two = run.areal > 1 || run.fight >= F.twoEnemiesFrom, three = run.areal > 1 || run.fight >= F.threeEnemiesFrom;
+  const r = rnd();
+  if (three && r < F.threeEnemiesChance) n = 3;
+  else if (two && r < F.threeEnemiesChance + F.twoEnemiesChance) n = 2;
   const elite = rnd() < F.eliteChance;
-  return { enemies: Array.from({ length: n }, (_, i) => makeEnemy(prog, { elite: elite && i === 0 })) };
+  return { enemies: Array.from({ length: n }, (_, i) => makeEnemy(prog, { elite: elite && i === 0, group: n })) };
 }
 // Trainer-Endboss: Themen-Team eines Typs, Größe wächst mit dem Areal, das letzte Pokémon ist das stärkste
 export function makeTrainer(prog) {

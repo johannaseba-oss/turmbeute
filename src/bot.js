@@ -4,7 +4,7 @@ import { rollStarters } from './ui/starter.js';
 
 export function installBot(G, R, K, stage) {
   const tick = () => new Promise((r) => setTimeout(r, 0));
-  const JUNK = /ball|trank|x-|bonbon|fragment|nugget|star-piece|comet|shiny-shard|hyperheiler|beere|lucky|everstone/;
+  const JUNK = /ball|trank|beleber|x-|bonbon|fragment|nugget|star-piece|comet|shiny-shard|hyperheiler|beere|lucky|everstone/;
   async function play({ dex = null, floors = 40, ms = 120000, smart = true } = {}) {
     stage.speed = 500;
     document.querySelector('#overlay').classList.add('hidden');
@@ -23,6 +23,7 @@ export function installBot(G, R, K, stage) {
         if (run.team[0].hp < st.hp * 0.35 && potion >= 0) await G.act('item', { idx: potion });
         else if (low && balls.length && run.team.length < 6) { b.targetUid = low.uid; await G.act('ball', { idx: balls[0][1] }); }
         else if (smart && freeMon >= 0 && K.alive().some((e) => e.boss || e.elite)) await G.act('mon', { idx: freeMon });
+        else if (K.alive().length > 1 && b.energy >= K.areaCost()) await G.act('area');
         else if (b.energy >= K.specialCost()) await G.act('special');
         else await G.act('attack');
       } else if (run.phase === 'loot') {
@@ -31,9 +32,12 @@ export function installBot(G, R, K, stage) {
         await G.next();
       } else if (run.phase === 'keystone') G.pickKeystone(run.ksOffer[0]);
       else if (run.phase === 'rest') {
+        for (const [mi, m] of run.team.entries()) { const rv = R.reviveItems()[0]; if (m.fainted && rv) G.reviveOn(rv[1], mi); }
+        // ohne Beleber: Besiegte entfernen
+        for (let mi = run.team.length - 1; mi >= 0 && run.team.length > 1; mi--) if (run.team[mi].fainted) G.release(mi);
         if (smart) {
           run.team.forEach((m, mi) => { for (let k = m.held.length; k < 4; k++) { const i = run.inv.findIndex((x) => x && !JUNK.test(x.id)); if (i >= 0) G.equip(i, mi); } });
-          run.shop.offers.forEach((o, i) => { if (o.fixed && o.id === 'trank' && run.gold > 40) G.buy(i); });
+          run.shop.offers.forEach((o, i) => { if (o.fixed && ['trank', 'beleber'].includes(o.id) && run.gold > 40) G.buy(i); });
         }
         const s = K.P().stats;
         log.push(`F${run.floor} hp${s.hp} atk${s.atk} spa${s.spa} def${s.def} g${run.gold} team${run.team.length} lv${run.team.map((m) => m.level).join('/')}`);

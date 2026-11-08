@@ -128,9 +128,17 @@ export const g = (m, k) => m[k] || 0;
 
 // --- Werte (Pokémon-Formel) -----------------------------------------------------
 // KP = (2·Basis + IV)·Lv/100 + Lv + 10, andere = (2·Basis + IV)·Lv/100 + 5
-export function baseStats(dex, level) {
-  const iv = D.B.ivs;
+export const randomIvs = () => STATS.map(() => Math.floor(Math.random() * 32));
+// Höchster und niedrigster Kampfwert (Ang/Abw/Sp.Ang/Sp.Abw) – ohne Zahlen angezeigt
+export function statExtremes(o) {
+  const keys = ['atk', 'def', 'spa', 'spd'];
+  const sorted = [...keys].sort((a, b) => o[b] - o[a]);
+  return { hi: sorted[0], lo: sorted[3] };
+}
+// ivs = individuelle Werte (0–31) je Wert; ohne: Durchschnitt aus balance.ivs
+export function baseStats(dex, level, ivs = null) {
   return Object.fromEntries(STATS.map((s, i) => {
+    const iv = ivs ? ivs[i] : D.B.ivs;
     const core = Math.floor(((2 * mon(dex).base[i] + iv) * level) / 100);
     return [s, s === 'hp' ? core + level + 10 : core + 5];
   }));
@@ -139,7 +147,7 @@ export function baseStats(dex, level) {
 export function computeStats(run, extra = [], m = run.team[0]) {
   const { ops, stacks, active } = allOps(run, extra, m);
   const mods = sumOps(ops);
-  const base = m ? baseStats(m.dex, m.level) : Object.fromEntries(STATS.map((s) => [s, 1]));
+  const base = m ? baseStats(m.dex, m.level, m.ivs) : Object.fromEntries(STATS.map((s) => [s, 1]));
   const out = {};
   for (const s of STATS) {
     const v = base[s] + (run.perm[s] || 0) + g(mods, s);

@@ -1,6 +1,8 @@
 // Kampfbühne: Canvas mit PMD-Sprites (Idle/Attack/Hurt), Effekt-Sheets, Schadenszahlen, Ballwurf. Hintergrund-Ausschnitt nach balance.backgrounds.crops.
 // Sheets: Zeilen = 8 Blickrichtungen (2 = rechts, 6 = links).
 import { D, mon, spriteUrl, typeColor, itemIconUrl, artUrl } from '../data.js';
+import { statExtremes } from '../mods.js';
+const SHORT = { atk: 'Ang', def: 'Abw', spa: 'Sp.Ang', spd: 'Sp.Abw' };
 
 const imgs = new Map();
 export function img(src) {
@@ -218,7 +220,7 @@ export class Stage {
     const a = this.actors.get(e.uid);
     if (!a || a.alpha <= 0.05) return;
     const x = this.x, dpr = this.dpr, p = this.pos(e.uid);
-    const n = this.enemies.length, w = Math.min(this.c.width * (n === 1 ? 0.36 : n === 2 ? 0.26 : 0.2), 190 * dpr), h = 7 * dpr;
+    const n = this.enemies.length, w = Math.min(this.c.width * (n === 1 ? 0.36 : n === 2 ? 0.26 : 0.16), 190 * dpr), h = 7 * dpr;
     const bx = Math.min(this.c.width - w - 4 * dpr, Math.max(4 * dpr, p.x - w / 2));
     const topY = p.y - (mon(e.dex).anims.Idle.fh * this.scale() * (e.boss ? 1.5 : 1)) * 0.8 - 30 * dpr;
     const by = Math.max(22 * dpr, topY);
@@ -241,6 +243,13 @@ export class Stage {
     x.fillText(`${e.hp}/${e.max}`, bx + w / 2, by + h + 9 * dpr);
     // Typen-Punkte
     e.types.forEach((t, i) => { x.fillStyle = typeColor(t); x.fillRect(bx + i * 7 * dpr, by + h + 3 * dpr, 5 * dpr, 5 * dpr); });
+    // Stärkster/schwächster Kampfwert
+    const ex = statExtremes(e);
+    x.font = `700 ${Math.round(9 * dpr)}px "Pixelify Sans", monospace`;
+    x.textAlign = 'left';
+    x.fillStyle = '#7cf08a'; x.fillText('▲' + SHORT[ex.hi], bx, by + h + 21 * dpr);
+    const hw = x.measureText('▲' + SHORT[ex.hi] + '  ').width;
+    x.fillStyle = '#ff7a8a'; x.fillText('▼' + SHORT[ex.lo], bx + hw, by + h + 21 * dpr);
     // Status
     const st = Object.keys(e.st).map((s) => STATUS_ICON[s] + (s === 'poison' && e.st.poison > 1 ? e.st.poison : '')).join(' ');
     if (st) { x.textAlign = 'right'; x.font = `${Math.round(10 * dpr)}px sans-serif`; x.fillText(st, bx + w, by + h + 11 * dpr); }

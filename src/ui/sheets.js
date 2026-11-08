@@ -1,7 +1,7 @@
 // Detail-Sheets: Item, Team-Pokémon (Werte, EP, Items), Typ-Stacks, Werte.
 import { D, mon, itemDef, portraitUrl, itemIconUrl, typeColor, rarityColor, rarityName } from '../data.js';
 import { computeStats, equipOps, itemStacks, opText, STAT_NAME, STATS, monPerk, g, heldOf, heldSlots, expFor } from '../mods.js';
-import { run, salvageGain, sellPrice, canEquip, itemPrice, fixHp, mergeTargets, mergeResult } from '../run.js';
+import { run, salvageGain, sellPrice, canEquip, itemPrice, fixHp, mergeTargets, mergeResult, reviveItems } from '../run.js';
 import { B, alive, catchChance, useEffect, monMove, specialCost } from '../combat.js';
 import { h, openSheet, closeSheet, fmt } from './dom.js';
 import { G } from '../game.js';
@@ -100,11 +100,13 @@ export function itemSheet(idx) {
         const p = catchChance(e, inst);
         btns.push(h('button.btn.pri', { onclick: () => { closeSheet(); G.act('ball', { idx }); } }, `Werfen auf ${e.name}`, h('small', `Fangchance ${p >= 1 ? '100' : (p * 100).toFixed(p < 0.1 ? 1 : 0)} %`)));
       }
-    } else if (useEffect(inst) && !def.restOnly) btns.push(h('button.btn.purple', { onclick: () => { closeSheet(); G.act('item', { idx }); } }, 'Verbrauchen', h('small', 'kostet die Aktion')));
+    } else if (def.use?.revive) btns.push(h('button.btn.pri', { disabled: !run.team.some((m) => m.fainted), onclick: () => faintedPicker(idx, (mi) => G.act('item', { idx, mon: mi })) }, 'Wiederbeleben', h('small', 'kostet die Aktion')));
+    else if (useEffect(inst) && !def.restOnly) btns.push(h('button.btn.purple', { onclick: () => { closeSheet(); G.act('item', { idx }); } }, 'Verbrauchen', h('small', 'kostet die Aktion')));
     btns.push(h('button.btn', { onclick: closeSheet }, 'Zurück'));
   } else {
     for (const t of mergeTargets(inst, idx).slice(0, 2)) btns.push(h('button.btn.purple', { onclick: () => { closeSheet(); G.merge(idx, t); } }, '↑ Aufwerten', h('small', mergeLabel(inst, t))));
     if (canEquip(inst)) btns.push(h('button.btn.pri', { onclick: () => equipPicker(idx) }, 'Anlegen'));
+    if (def.use?.revive) btns.push(h('button.btn.pri', { disabled: !run.team.some((m) => m.fainted), onclick: () => faintedPicker(idx, (mi) => G.reviveOn(idx, mi)) }, 'Wiederbeleben', h('small', run.team.some((m) => m.fainted) ? 'besiegtes Pokémon wählen' : 'niemand ist besiegt')));
     if (def.kind === 'potion' && def.use?.heal) btns.push(h('button.btn.pri', { onclick: () => monPicker(idx, (i) => G.useOn(idx, i)) }, 'Benutzen'));
     if (def.kind === 'candy') btns.push(h('button.btn.pri', { onclick: () => candyPicker(idx) }, 'Benutzen'));
     btns.push(h('button.btn.purple', { onclick: () => { closeSheet(); G.salvage(idx); } }, 'Zerlegen', h('small', 'permanente Werte')));
@@ -133,6 +135,10 @@ function monPicker(idx, pick) {
     return h('button.btn', { disabled: m.fainted, onclick: () => { closeSheet(); pick(i); } }, mon(m.dex).name, h('small', m.fainted ? 'K.O.' : `KP ${m.hp}/${max}`));
   })));
 }
+function faintedPicker(idx, pick) {
+  openSheet(itemHead(run.inv[idx]), h('div.hint', 'Wen wiederbeleben?'), h('div.btns', run.team.map((m, i) => m.fainted ? h('button.btn', { onclick: () => { closeSheet(); pick(i); } },
+    h('img', { src: portraitUrl(m.dex), style: { width: '28px', imageRendering: 'pixelated', verticalAlign: 'middle', marginRight: '6px' } }), mon(m.dex).name, h('small', `Lv ${m.level}`)) : null), h('button.btn', { onclick: closeSheet }, 'Abbrechen')));
+}
 function candyPicker(idx) {
   openSheet(itemHead(run.inv[idx]), h('div.hint', 'Welches Pokémon?'), h('div.btns', run.team.map((m, i) => h('button.btn', { onclick: () => { closeSheet(); G.candy(idx, i); } }, mon(m.dex).name, h('small', `Lv ${m.level}`)))));
 }
@@ -146,12 +152,17 @@ export function monSheet(i) {
   const b = B(), inBattle = run.phase === 'battle' && b;
   const st = D.stacks;
   const btns = [];
-  if (inBattle) {
+  // Besiegt: Beleber nutzen oder aus dem Team entfernen
+  if (m.fainted) {
+    const rv = reviveItems()[0];
+    btns.push(h('button.btn.pri', { disabled: !rv || (inBattle && b.busy), onclick: () => { closeSheet(); inBattle ? G.act('item', { idx: rv[1], mon: i }) : G.reviveOn(rv[1], i); } }, 'Wiederbeleben', h('small', rv ? `${itemDef(rv[0].id).name}${inBattle ? ' · kostet die Aktion' : ''}` : 'kein Beleber im Inventar')));
+    if (run.team.length > 1) btns.push(h('button.btn.warn', { onclick: () => confirmRelease(i) }, 'Aus dem Team entfernen'));
+  } else if (inBattle) {
     btns.push(h('button.btn.pri', { disabled: m.used || m.fainted || b.busy, onclick: () => { closeSheet(); G.act('mon', { idx: i }); } }, 'Einsetzen', h('small', m.used ? 'erschöpft bis zur nächsten Rast' : `${mv.name} (${mv.type})`)));
     btns.push(h('button.btn.warn', { disabled: run.team.length <= 1 || b.busy, onclick: () => confirmSac(i) }, 'Opfern', h('small', 'massiver Boost bis zur Rast')));
     if (i > 0) btns.push(h('button.btn', { disabled: b.busy || m.fainted, onclick: () => { closeSheet(); G.act('lead', { idx: i }); } }, 'Als Anführer', h('small', 'kostet die Aktion')));
   } else {
-    if (i > 0) btns.push(h('button.btn.pri', { disabled: m.fainted, onclick: () => { closeSheet(); G.setLead(i); } }, 'Als Anführer'));
+    if (i > 0) btns.push(h('button.btn.pri', { onclick: () => { closeSheet(); G.setLead(i); } }, 'Als Anführer'));
     if (run.team.length > 1) btns.push(h('button.btn.warn', { onclick: () => confirmRelease(i) }, 'Freilassen'));
   }
   btns.push(h('button.btn', { onclick: closeSheet }, 'Zurück'));
