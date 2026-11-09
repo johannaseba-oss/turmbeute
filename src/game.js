@@ -1,5 +1,5 @@
 // Spielablauf: Titel → Starter → Floors (Kämpfe → Beute) → Rast (Shop, Zerlegen, Keystones) → … → Game Over.
-import { D, mon, itemDef, portraitUrl, itemIconUrl, typeColor, rarityColor, rarityName, pick, rnd } from './data.js';
+import { D, mon, itemDef, portraitUrl, itemIconUrl, typeColor, rarityColor, rarityName, pick, rnd, typeEff } from './data.js';
 import { computeStats, g, sumOps, keystoneOps, opText, expGain } from './mods.js';
 import * as R from './run.js';
 import { run } from './run.js';
@@ -116,6 +116,7 @@ export const G = {
   init() {
     stage = new Stage($('#stage'));
     stage.speed = +(localStorage.getItem('turmbeute.speed') || 1);
+    stage.effOf = (e) => { const L = run?.team?.[0]; if (!L) return null; const own = mon(L.dex).types; return { atk: Math.max(...own.map((t) => typeEff(t, e.types))), spec: typeEff(K.leadMoves().special.type, e.types) }; };
     $('#speed').textContent = '×' + stage.speed;
     $('#speed').onclick = () => { stage.speed = stage.speed >= 3 ? 1 : stage.speed + 1; $('#speed').textContent = '×' + stage.speed; try { localStorage.setItem('turmbeute.speed', stage.speed); } catch {} };
     $('#menu-btn').onclick = () => G.menu();
@@ -512,6 +513,7 @@ function help() {
     h('li', 'Ein Areal hat 15 Kämpfe: erst wilde Pokémon (am Anfang Nager & Co., dann stärkere), Kampf 14 ein Trainer-Endboss mit Themen-Team, Kampf 15 ein Legendäres. Rast mit Heilung und Shop nach Kampf 5, 10 und 13, am Areal-Ende ein Keystone.'),
     h('li', 'Du startest mit 3 Pokémon auf Lv 1. Der Anführer (♛) kämpft mit seinen eigenen Werten und seinen bis zu 4 Items. Wird er besiegt, kommt das nächste. Alle geben Typ-Stacks und ihre Fähigkeit fürs Team.'),
     h('li', 'Besiegte Gegner geben EP an den Kämpfer. Mit dem EP-Teiler (Shop oder erster Trainer-Sieg) bekommen die anderen die Hälfte. Level ohne Obergrenze, Entwicklungen wie im Original. In der Rast wird geheilt; besiegte Pokémon kommen nur mit einem Beleber zurück (oder du entfernst sie aus dem Team).'),
+    h('li', 'Angriff und Rundumschlag nehmen den Typ deines Pokémon an (bei zwei Typen den wirksameren), Spezial hat den Typ seiner Attacke. Unter jedem Gegner stehen seine Typen und wie gut ⚔ Angriff/Rundumschlag und ✦ Spezial gegen ihn wirken (×2 grün, ×½ rot).'),
     h('li', 'Über jedem Gegner: ▲ sein höchster und ▼ sein niedrigster Kampfwert (Ang/Abw/Sp.Ang/Sp.Abw). Niedrige Abw → Angriff, niedrige Sp.Abw → Spezial. Rundumschlag trifft alle Gegner.'),
     h('li', 'Im Kampf: Angriff, Spezial (kostet Energie), Warten, ein Item verbrauchen, einen Ball werfen oder ein Pokémon einsetzen/opfern (Pokémon antippen).'),
     h('li', 'Fangen: je weniger KP und mit Status (Schlaf, Paralyse, Gift, Verbrennung), desto besser. Fehlwurf macht den Gegner wütend.'),

@@ -32,7 +32,7 @@ export function renderHud() {
   $('#player').replaceChildren(
     h('img.lead', { src: portraitUrl(L.dex), onclick: () => monSheet(0) }),
     h('div.bars',
-      h('div.leadname', h('b', mon(L.dex).name), ` Lv ${L.level}`),
+      h('div.leadname', h('b', mon(L.dex).name), ` Lv ${L.level} `, ...mon(L.dex).types.map((t) => h('span.tchip', { style: { background: typeColor(t) } }, t))),
       h('div.bar', h('i', { style: { width: hpK * 100 + '%' } }), h('b', { style: { width: shK * 100 + '%' } }), h('span', `${fmt(L.hp)} / ${fmt(stats.hp)}${b?.shield ? '  🛡' + fmt(b.shield) : ''}`)),
       h('div.xp', h('i', { style: { width: Math.min(100, ((L.exp - e0) / Math.max(1, e1 - e0)) * 100) + '%' } })),
       h('div.statline', { onclick: () => statsSheet() },
@@ -75,10 +75,10 @@ function renderActions(b) {
   }
   const btn = (cls, icon, name, sub, onclick, disabled) => h('button', { class: cls, onclick, disabled }, h('span.bt', h('i', icon), h('span', name)), h('small', sub));
   a.replaceChildren(energy, h('div.actgrid',
-    btn('main', '⚔', 'Angriff', 'Einzelziel · kostenlos', () => G.aimOrAct('attack'), busy),
+    btn('main', '⚔', 'Angriff', `Einzelziel · ${mon(run.team[0].dex).types.join('/')} · kostenlos`, () => G.aimOrAct('attack'), busy),
     btn('spec', '✦', mv.special.name, `Einzelziel · ${mv.special.type} · ${cost}⚡`, () => G.aimOrAct('special'), busy || b.energy < cost),
-    btn('area', '✸', 'Rundumschlag', `FLÄCHE · alle Gegner · ${areaCost()}⚡`, () => G.aimOrAct('area'), busy || b.energy < areaCost()),
-    btn('wait', '⏳', 'Warten', '+1⚡ · etwas Heilung', () => G.act('wait'), busy)));
+    btn('area', '✸', 'Rundumschlag', `FLÄCHE · ${mon(run.team[0].dex).types.join('/')} · ${areaCost()}⚡`, () => G.aimOrAct('area'), busy || b.energy < areaCost()),
+    btn('wait', '⏳', 'Warten', `+1⚡ · ${Math.round(D.B.combat?.waitHeal * 100 || 20)} % KP`, () => G.act('wait'), busy)));
 }
 
 export function renderTeam() {

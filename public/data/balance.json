@@ -27,7 +27,7 @@
     "specialMult": 1.7,
     "stab": 1.5,
     "critMult": 1.5,
-    "waitHeal": 0.08,
+    "waitHeal": 0.2,
     "waitEnergy": 1,
     "useMonMult": 2.2,
     "useMonCooldownFloor": true,

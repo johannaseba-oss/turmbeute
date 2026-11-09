@@ -270,15 +270,33 @@ export class Stage {
     if (e.guard > 0) { x.fillStyle = 'rgba(140,200,255,0.8)'; x.fillRect(bx, by + h - 2 * dpr, w * Math.min(1, e.guard / e.max), 2 * dpr); }
     x.font = `700 ${Math.round(9 * dpr)}px "Pixelify Sans", monospace`; x.textAlign = 'center'; x.fillStyle = '#fff';
     x.fillText(`${e.hp}/${e.max}`, bx + w / 2, by + h + 9 * dpr);
-    // Typen-Punkte
-    e.types.forEach((t, i) => { x.fillStyle = typeColor(t); x.fillRect(bx + i * 7 * dpr, by + h + 3 * dpr, 5 * dpr, 5 * dpr); });
+    // dunkler Grund unter den Zusatzzeilen, damit sie auch über dem Sprite lesbar bleiben
+    x.fillStyle = 'rgba(12,10,24,0.72)'; x.beginPath(); x.roundRect(bx - 3 * dpr, by + h + 11 * dpr, w + 6 * dpr, 26 * dpr, 3 * dpr); x.fill();
+    // Typen des Gegners als farbige Kürzel
+    x.font = `700 ${Math.round(8 * dpr)}px "Pixelify Sans", monospace`; x.textAlign = 'center';
+    let tx = bx;
+    for (const t of e.types) {
+      const label = t.slice(0, 3), tw = x.measureText(label).width + 6 * dpr;
+      x.fillStyle = typeColor(t); x.fillRect(tx, by + h + 13 * dpr, tw, 10 * dpr);
+      x.fillStyle = '#fff'; x.fillText(label, tx + tw / 2, by + h + 21 * dpr);
+      tx += tw + 2 * dpr;
+    }
     // Stärkster/schwächster Kampfwert
     const ex = statExtremes(e);
     x.font = `700 ${Math.round(9 * dpr)}px "Pixelify Sans", monospace`;
     x.textAlign = 'left';
-    x.fillStyle = '#7cf08a'; x.fillText('▲' + SHORT[ex.hi], bx, by + h + 21 * dpr);
+    x.fillStyle = '#7cf08a'; x.fillText('▲' + SHORT[ex.hi], bx, by + h + 33 * dpr);
     const hw = x.measureText('▲' + SHORT[ex.hi] + '  ').width;
-    x.fillStyle = '#ff7a8a'; x.fillText('▼' + SHORT[ex.lo], bx + hw, by + h + 21 * dpr);
+    x.fillStyle = '#ff7a8a'; x.fillText('▼' + SHORT[ex.lo], bx + hw, by + h + 33 * dpr);
+    // Wirkung der eigenen Angriffe auf diesen Gegner (⚔ Angriff/Rundumschlag, ✦ Spezial)
+    const ef = this.effOf?.(e);
+    if (ef) {
+      const fmtE = (v) => (v === 0 ? '×0' : v === 0.25 ? '×¼' : v === 0.5 ? '×½' : '×' + v), col = (v) => (v > 1 ? '#7cf08a' : v === 0 ? '#9a94c0' : v < 1 ? '#ff7a8a' : '#e8e4ff');
+      x.textAlign = 'right';
+      x.fillStyle = col(ef.spec); x.fillText('✦' + fmtE(ef.spec), bx + w, by + h + 21 * dpr);
+      const sw = x.measureText('✦' + fmtE(ef.spec) + ' ').width;
+      x.fillStyle = col(ef.atk); x.fillText('⚔' + fmtE(ef.atk), bx + w - sw, by + h + 21 * dpr);
+    }
     // Status
     const st = Object.keys(e.st).map((s) => STATUS_ICON[s] + (s === 'poison' && e.st.poison > 1 ? e.st.poison : '')).join(' ');
     if (st) { x.textAlign = 'right'; x.font = `${Math.round(10 * dpr)}px sans-serif`; x.fillText(st, bx + w, by + h + 11 * dpr); }

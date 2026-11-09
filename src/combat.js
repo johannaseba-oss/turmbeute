@@ -32,7 +32,9 @@ export async function startBattle(enemies, { reserve = [], trainer = null } = {}
 }
 
 // --- Schaden des Spielers --------------------------------------------------------
-function dmgCalc(e, { power, type, cat, neutral }, stats, mods, who = lead()) {
+// eigener Typ, der gegen dieses Ziel am besten wirkt (Angriff und Rundumschlag nehmen den Typ des Pokémon an)
+export const bestOwnType = (who, e) => mon(who.dex).types.reduce((a, t) => (typeEff(t, e.types) > typeEff(a, e.types) ? t : a), mon(who.dex).types[0]);
+function dmgCalc(e, { power, type, cat, neutral, nostab }, stats, mods, who = lead()) {
   const c = C(), b = B();
   const A = cat === 'phys' ? stats.atk : stats.spa;
   let D_ = cat === 'phys' ? e.def : e.spd;
@@ -42,7 +44,7 @@ function dmgCalc(e, { power, type, cat, neutral }, stats, mods, who = lead()) {
   D_ *= 1 - clamp(ign, 0, 0.9);
   let eff = neutral ? 1 : typeEff(type, e.types);
   if (eff > 1) eff += g(mods, 'effBoost') * (eff / 2);
-  const stab = !neutral && mon(who.dex).types.includes(type) ? c.stab : 1;
+  const stab = !neutral && !nostab && mon(who.dex).types.includes(type) ? c.stab : 1;
   let mult = 1 + g(mods, 'dmgPct') + (mods.typeDmg[type] || 0) + (eff > 1 ? g(mods, 'superPct') : 0) + g(mods, 'ramp') * (b.turn - 1);
   if (who.hp < stats.hp * 0.5) mult += g(mods, 'lowHp');
   if (e.st.para) mult += g(mods, 'vsPara');
@@ -58,6 +60,7 @@ function dmgCalc(e, { power, type, cat, neutral }, stats, mods, who = lead()) {
 
 // Ein Treffer (inkl. Status, Kettenschaden, Lebensraub …)
 async function strike(e, move, { stats, mods, label, secondary = false, statusBonus = null, who = lead() } = {}) {
+  if (move.ownType) move = { ...move, type: bestOwnType(who, e) };
   const { dmg, eff, crit } = dmgCalc(e, move, stats, mods, who);
   await fx({ kind: 'hit', e, dmg: absorb(e, dmg), eff, crit, type: move.type, label });
   if (e.hp <= 0) { await onKill(e, mods); return dmg; }
@@ -154,7 +157,7 @@ export function specialCost() {
 export function leadMoves() {
   const sp = mon(lead().dex), mv = monMove(lead());
   return {
-    attack: { name: 'Angriff', type: sp.types[0], cat: 'phys', power: C().attackMult, neutral: true },
+    attack: { name: 'Angriff', type: sp.types[0], cat: 'phys', power: C().attackMult, ownType: true, nostab: true },
     special: { name: mv.name, type: mv.type, cat: mv.cat === 'phys' ? 'phys' : 'spez', power: C().specialMult * mv.power },
   };
 }
@@ -252,7 +255,7 @@ async function areaAttack(stats, mods) {
   if (b.energy < cost) return false;
   b.energy -= cost;
   const mv = leadMoves().special;
-  const move = { ...mv, name: 'Rundumschlag', power: mv.power * C().areaMult * (1 + g(mods, 'specialPct')) };
+  const move = { ...mv, name: 'Rundumschlag', type: mon(lead().dex).types[0], ownType: true, power: mv.power * C().areaMult * (1 + g(mods, 'specialPct')) };
   await fx({ kind: 'pattack', move, special: true, all: true });
   await fx({ kind: 'aoe', type: move.type });
   for (const [i, e] of alive().entries()) await strike(e, move, { stats, mods, label: i ? null : 'Rundumschlag', secondary: i > 0 });
